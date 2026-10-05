@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ConnectSphere - A modern, vibrant full-stack social media platform for connecting, sharing ideas, and exploring inspiring creators.">
+  <meta name="keywords" content="social media, ConnectSphere, creators, community, photos, stories, posts">
+  <meta name="author" content="ConnectSphere">
+  <title>ConnectSphere | Connect, Share & Inspire</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+</head>
+<body>
+
+  <!-- MOBILE TOP HEADER -->
+  <header class="mobile-top-header">
+    <div class="brand-header" style="padding: 0;" onclick="window.CS_PROFILE.showFeedView()">
+      <div class="brand-logo-icon">🌐</div>
+      <span class="brand-name">ConnectSphere</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <button class="btn-icon" data-nav="search" aria-label="Search">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+      <button class="btn-icon" data-nav="notifications" aria-label="Notifications" style="position: relative;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="badge-count" id="mobileNotifBadge" style="display: none;">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- APP SHELL CONTAINER -->
+  <div class="app-container">
+
+    <!-- DESKTOP LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <div>
+        <div class="brand-header" onclick="window.CS_PROFILE.showFeedView()">
+          <div class="brand-logo-icon">🌐</div>
+          <span class="brand-name">ConnectSphere</span>
+        </div>
+
+        <nav class="nav-menu">
+          <button class="nav-item active" data-nav="feed" data-view="feed">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span class="nav-text">Home Feed</span>
+          </button>
+
+          <button class="nav-item" data-nav="explore" data-view="explore">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+            <span class="nav-text">Search & Explore</span>
+          </button>
+
+          <button class="nav-item" data-nav="notifications" data-view="notifications" style="position: relative;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="nav-text">Notifications</span>
+            <span class="badge-count" id="notifBadge" style="display: none;">0</span>
+          </button>
+
+          <button class="nav-item" data-nav="create">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            <span class="nav-text">Create Post</span>
+          </button>
+
+          <button class="nav-item" data-nav="profile" data-view="profile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span class="nav-text">My Profile</span>
+          </button>
+
+          <button class="btn btn-primary btn-create-post-sidebar" data-nav="create">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>New Post</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <!-- Theme Toggle -->
+        <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle theme">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="themeIcon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </span>
+            <span class="theme-toggle-text" id="themeText">Light Mode</span>
+          </div>
+        </button>
+
+        <!-- Login Prompt if guest -->
+        <button class="btn btn-primary btn-sm" id="sidebarLoginBtn" style="width: 100%; display: flex;" onclick="window.CS_AUTH.openAuthModal('login')">
+          Sign In
+        </button>
+
+        <!-- Current User Profile Pill -->
+        <div class="user-profile-pill" id="sidebarUserPill" style="display: none;">
+          <img src="" alt="" class="avatar avatar-sm" id="userPillAvatar">
+          <div class="user-pill-info">
+            <span class="user-pill-name" id="userPillName"></span>
+            <span class="user-pill-username" id="userPillUsername"></span>
+          </div>
+          <span class="user-pill-more">•••</span>
+
+          <!-- Dropdown -->
+          <div class="user-menu-dropdown" id="userMenuDropdown">
+            <div class="dropdown-item" onclick="window.CS_APP.openProfile()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              View Profile
+            </div>
+            <div class="dropdown-item" onclick="window.CS_AUTH.openSwitchModal()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+              Switch Account
+            </div>
+            <div class="dropdown-item danger" onclick="window.CS_AUTH.logout()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              Log Out
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CENTRAL CONTENT -->
+    <div class="main-wrapper">
+      <main class="content-area">
+
+        <!-- FEED VIEW CONTAINER -->
+        <div id="feedViewContainer">
+          <!-- Stories Carousel -->
+          <section class="stories-container" id="storiesContainer" aria-label="Stories">
+            <!-- Dynamically populated -->
+          </section>
+
+          <!-- Quick Post Composer -->
+          <section class="composer-card">
+              <div class="avatar avatar-sm" id="composerUserAvatar" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </div>
+              <button class="composer-input-trigger" onclick="window.CS_POSTS.openCreateModal()">
+                What's inspiring you today? Share a post...
+              </button>
+            </div>
+            <div class="composer-actions">
+              <button class="composer-action-btn photo" onclick="window.CS_POSTS.openCreateModal()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span>Photo / Media</span>
+              </button>
+              <button class="composer-action-btn tag" onclick="window.CS_POSTS.openCreateModal()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
+                <span>Hashtag</span>
+              </button>
+              <button class="composer-action-btn location" onclick="window.CS_POSTS.openCreateModal()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <span>Location</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- Feed Filter Tabs -->
+          <div class="feed-tabs-container">
+            <div class="feed-tabs">
+              <div class="feed-tab active" data-feed="foryou" onclick="window.CS_APP.switchFeedTab('foryou')">
+                ✨ For You
+              </div>
+              <div class="feed-tab" data-feed="following" onclick="window.CS_APP.switchFeedTab('following')">
+                👥 Following
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Hashtag Filter Banner -->
+          <div class="filter-badge-bar" id="filterBadgeBar">
+            <span>Posts tagged with <strong id="filterTagName">#tag</strong></span>
+            <span class="btn-clear-filter" onclick="window.CS_APP.clearFilter()">
+              Clear filter ✕
+            </span>
+          </div>
+
+          <!-- Post Cards Stream -->
+          <div id="feedPostsContainer">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- PROFILE VIEW CONTAINER -->
+        <div class="profile-view-container" id="profileViewContainer">
+          <div class="profile-header-card" id="profileHeaderContent">
+            <!-- Dynamically populated -->
+          </div>
+          <div class="profile-posts-grid" id="profilePostsGrid">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </main>
+
+      <!-- RIGHT SIDEBAR (Widgets) -->
+      <aside class="right-sidebar">
+        <!-- User Mini Widget -->
+        <div class="widget-card" id="rightUserWidget">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Suggestions Widget -->
+        <div class="widget-card">
+          <div class="widget-title">
+            <span>Suggested Creators</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+          <div class="suggestions-list" id="suggestionsContainer">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Trending Topics Widget -->
+        <div class="widget-card">
+          <div class="widget-title">
+            <span>Trending Topics</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+          </div>
+          <div class="trending-list" id="trendingListContainer">
+            <!-- Dynamically populated from actual posts in database -->
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="platform-footer">
+          <div class="footer-links">
+            <a href="#" onclick="event.preventDefault(); window.CS_UI.showToast('ConnectSphere v1.0.0 Full-Stack Platform', 'info')">About</a> •
+            <a href="#" onclick="event.preventDefault(); window.CS_UI.showToast('Terms of Service', 'info')">Terms</a> •
+            <a href="#" onclick="event.preventDefault(); window.CS_UI.showToast('Privacy Policy', 'info')">Privacy</a> •
+            <a href="#" onclick="event.preventDefault(); window.CS_UI.showToast('API Documentation at /api/health', 'info')">API</a> •
+            <a href="#" onclick="event.preventDefault(); window.CS_AUTH.openSwitchModal()">Accounts</a>
+          </div>
+          <p>© 2026 ConnectSphere • Built with Node.js, Express & MongoDB</p>
+        </footer>
+      </aside>
+    </div>
+
+  </div>
+
+  <!-- NOTIFICATIONS DROPDOWN POPUP -->
+  <div class="notifications-dropdown" id="notificationsDropdown">
+    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+      <h4 style="font-size: 1rem;">Notifications</h4>
+      <span style="font-size: 0.78rem; color: #3b82f6; cursor: pointer;" onclick="window.CS_APP.checkNotifications()">Refresh</span>
+    </div>
+    <div id="notificationsList">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+
+  <!-- MOBILE BOTTOM NAVIGATION -->
+  <nav class="mobile-bottom-nav">
+    <button class="mobile-nav-item active" data-nav="feed" aria-label="Home">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    </button>
+    <button class="mobile-nav-item" data-nav="explore" aria-label="Search">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    </button>
+    <button class="mobile-nav-item" data-nav="create" aria-label="Create Post">
+      <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; color: #fff;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </div>
+    </button>
+    <button class="mobile-nav-item" data-nav="notifications" aria-label="Notifications">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+    </button>
+    <button class="mobile-nav-item" data-nav="profile" aria-label="Profile">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    </button>
+  </nav>
+
+  <!-- ========================================================================= -->
+  <!-- MODALS -->
+  <!-- ========================================================================= -->
+
+  <!-- 1. CREATE POST MODAL -->
+  <div class="modal-overlay" id="createPostModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Create New Post</h3>
+        <button class="modal-close-btn" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="createPostForm">
+          <!-- Dropzone -->
+          <div class="dropzone" id="postDropzone">
+            <div class="dropzone-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            </div>
+            <div>
+              <p style="font-weight: 700; font-size: 0.95rem;">Drag & drop photo here</p>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">or click to browse from device</p>
+            </div>
+          </div>
+          <input type="file" id="postFileInput" accept="image/*" style="display: none;">
+
+          <!-- Image Preview -->
+          <div class="modal-image-preview-container" id="imagePreviewContainer">
+            <img id="imagePreview" src="" alt="Preview">
+            <button type="button" class="btn-remove-preview" id="removePreviewBtn" title="Remove image">✕</button>
+          </div>
+
+          <!-- Or Image URL -->
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label">Or paste image URL:</label>
+            <input type="url" id="postImageUrlInput" placeholder="https://images.unsplash.com/photo-...">
+          </div>
+
+          <!-- Filter Selector -->
+          <div class="form-group">
+            <label class="form-label">Photo Filter Preset:</label>
+            <div class="filter-selector-bar">
+              <div class="filter-preset-pill active" data-filter="normal">Normal</div>
+              <div class="filter-preset-pill" data-filter="clarendon">Clarendon</div>
+              <div class="filter-preset-pill" data-filter="vintage">Vintage</div>
+              <div class="filter-preset-pill" data-filter="bw">Black & White</div>
+              <div class="filter-preset-pill" data-filter="warm">Warm Glow</div>
+              <div class="filter-preset-pill" data-filter="cool">Cool Synth</div>
+              <div class="filter-preset-pill" data-filter="cyberpunk">Cyberpunk</div>
+            </div>
+          </div>
+
+          <!-- Caption -->
+          <div class="form-group">
+            <label class="form-label">Caption:</label>
+            <textarea id="postCaptionInput" rows="3" placeholder="Write an engaging caption... Mention people with @username and topics with #hashtags"></textarea>
+          </div>
+
+          <!-- Location & Tags -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Location (Optional):</label>
+              <input type="text" id="postLocationInput" placeholder="e.g. San Francisco, CA">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tags (Optional):</label>
+              <input type="text" id="postTagsInput" placeholder="#coding, #design">
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
+            <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Share Post</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. CREATE STORY MODAL -->
+  <div class="modal-overlay" id="createStoryModal">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Share to Story</h3>
+        <button class="modal-close-btn" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="createStoryForm">
+          <div class="form-group">
+            <label class="form-label">Story Image:</label>
+            <input type="file" id="storyFileInput" accept="image/*">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Or Image URL:</label>
+            <input type="url" id="storyUrlInput" placeholder="https://images.unsplash.com/...">
+          </div>
+
+          <div class="modal-image-preview-container" id="storyPreviewContainer" style="max-height: 240px;">
+            <img id="storyPreviewImg" src="" alt="Story Preview" style="object-fit: contain;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Story Caption (Optional):</label>
+            <input type="text" id="storyCaptionInput" placeholder="Add a short vibe or note..." maxlength="100">
+          </div>
+
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 16px;">
+            ⏳ Stories automatically disappear 24 hours after publishing.
+          </p>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Add to Story</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. FULLSCREEN STORY VIEWER MODAL -->
+  <div class="story-viewer-modal" id="storyViewerModal">
+    <div class="story-viewer-card">
+      <!-- Progress Bar Segments -->
+      <div class="story-progress-bar-container" id="storyProgressContainer"></div>
+
+      <!-- Top Author Info -->
+      <div class="story-top-info">
+        <div class="story-author-tag">
+          <img src="" id="storyViewerAuthorAvatar" class="avatar avatar-xs" alt="User">
+          <span id="storyViewerAuthorName">username</span>
+        </div>
+        <button class="story-close-btn" onclick="window.CS_STORIES.closeViewer()">✕</button>
+      </div>
+
+      <!-- Story Media -->
+      <img src="" id="storyViewerMedia" class="story-media-view" alt="Story">
+      <div class="story-caption-overlay" id="storyViewerCaption"></div>
+
+      <!-- Navigation Tap Areas -->
+      <div class="story-tap-prev" onclick="window.CS_STORIES.prevStory()" title="Previous story"></div>
+      <div class="story-tap-next" onclick="window.CS_STORIES.nextStory()" title="Next story"></div>
+    </div>
+  </div>
+
+  <!-- 4. EDIT PROFILE MODAL -->
+  <div class="modal-overlay" id="editProfileModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Profile</h3>
+        <button class="modal-close-btn" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="editProfileForm">
+          <div class="form-group">
+            <label class="form-label">Full Name:</label>
+            <input type="text" id="editNameInput" required maxlength="50">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Avatar Image URL:</label>
+            <input type="url" id="editAvatarInput" placeholder="https://images.unsplash.com/...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bio (Max 160 chars):</label>
+            <textarea id="editBioInput" rows="3" maxlength="160" placeholder="Tell the community about yourself..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Website:</label>
+            <input type="url" id="editWebsiteInput" placeholder="https://yourportfolio.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Location:</label>
+            <input type="text" id="editLocationInput" placeholder="e.g. Tokyo, Japan">
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 18px;">
+            <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. AUTH MODAL (Login / Register) -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-card" style="max-width: 460px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="brand-logo-icon" style="width: 28px; height: 28px; font-size: 1rem;">🌐</div>
+          <h3 class="modal-title">ConnectSphere</h3>
+        </div>
+        <button class="modal-close-btn" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Dual Tabs -->
+        <div class="auth-tabs">
+          <div class="auth-tab active" data-tab="login" onclick="window.CS_AUTH.switchAuthTab('login')">
+            Log In
+          </div>
+          <div class="auth-tab" data-tab="register" onclick="window.CS_AUTH.switchAuthTab('register')">
+            Sign Up
+          </div>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm">
+          <div class="form-group">
+            <label class="form-label">Email or Username:</label>
+            <input type="text" id="loginIdentifierInput" placeholder="Enter your email or username" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password:</label>
+            <input type="password" id="loginPasswordInput" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Log In</button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="registerForm" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Full Name:</label>
+            <input type="text" id="regNameInput" placeholder="Enter your full name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Username:</label>
+            <input type="text" id="regUsernameInput" placeholder="Choose a username" required pattern="^[a-zA-Z0-9_.]+$">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address:</label>
+            <input type="email" id="regEmailInput" placeholder="Enter your email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password (min 6 chars):</label>
+            <input type="password" id="regPasswordInput" placeholder="••••••••" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bio (Optional):</label>
+            <input type="text" id="regBioInput" placeholder="Brief tagline or bio...">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. LIVE SEARCH MODAL -->
+  <div class="modal-overlay" id="searchModal">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Search ConnectSphere</h3>
+        <button class="modal-close-btn" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <input type="text" id="creatorSearchInput" placeholder="Search by name, username (@)..." autocomplete="off">
+        </div>
+        <div id="searchResultsContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto;">
+          <!-- Results populated dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- SCRIPTS -->
+  <script src="/js/api.js"></script>
+  <script src="/js/state.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/stories.js"></script>
+  <script src="/js/posts.js"></script>
+  <script src="/js/profile.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
