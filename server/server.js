@@ -89,10 +89,16 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 let serverInstance = null;
+let storyCleanupInterval = null;
 
 const startServer = async () => {
   try {
     await connectDB();
+
+    // Automated 24-hour story cleanup runner (runs on startup and every 5 minutes)
+    const { cleanupExpiredStories } = require('./controllers/story.controller');
+    cleanupExpiredStories();
+    storyCleanupInterval = setInterval(cleanupExpiredStories, 5 * 60 * 1000);
 
     serverInstance = app.listen(PORT, () => {
       console.log(`
@@ -126,6 +132,9 @@ const startServer = async () => {
 const gracefulShutdown = async (signal) => {
   console.log(`\n🛑 Received ${signal}. Shutting down ConnectSphere gracefully...`);
   try {
+    if (storyCleanupInterval) {
+      clearInterval(storyCleanupInterval);
+    }
     if (serverInstance) {
       serverInstance.close();
     }

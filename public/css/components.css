@@ -946,6 +946,37 @@
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
+.story-time-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.45);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.3px;
+  backdrop-filter: blur(4px);
+}
+
+.story-delete-btn {
+  color: #fff;
+  cursor: pointer;
+  background: rgba(239, 68, 68, 0.4);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.story-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.85);
+  transform: scale(1.08);
+}
+
 .story-close-btn {
   color: #fff;
   cursor: pointer;
@@ -956,6 +987,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.story-close-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .story-media-view {

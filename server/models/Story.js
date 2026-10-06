@@ -19,13 +19,18 @@ const storySchema = new mongoose.Schema(
     },
     expiresAt: {
       type: Date,
-      default: () => new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-      index: { expires: '1m' }, // TTL index
+      default: () => new Date(Date.now() + 24 * 60 * 60 * 1000), // Exactly 24 hours
+      index: { expires: 0 }, // TTL index: MongoDB deletes the document when expiresAt <= current time
     },
   },
   {
     timestamps: true,
   }
 );
+
+// Method to verify if a story has expired (>24 hours)
+storySchema.methods.isExpired = function () {
+  return new Date() >= this.expiresAt;
+};
 
 module.exports = mongoose.model('Story', storySchema);

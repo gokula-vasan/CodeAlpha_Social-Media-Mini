@@ -98,6 +98,13 @@ const storiesController = {
     const authorName = document.getElementById('storyViewerAuthorName');
     const captionEl = document.getElementById('storyViewerCaption');
     const progressContainer = document.getElementById('storyProgressContainer');
+    const timeBadge = document.getElementById('storyViewerTimeBadge');
+    const deleteBtn = document.getElementById('storyViewerDeleteBtn');
+
+    // Set media image
+    if (mediaImg) {
+      mediaImg.src = story.mediaUrl;
+    }
 
     if (authorAvatar) {
       authorAvatar.src = user.avatar || window.CS_UI.getDefaultAvatar(user.name);
@@ -115,6 +122,29 @@ const storiesController = {
         window.CS_APP.openProfile(user.username);
       };
     }
+
+    // Time remaining badge (stories auto-delete after 24 hours)
+    let remainingText = story.timeRemainingFormatted;
+    if (!remainingText && story.expiresAt) {
+      const msLeft = Math.max(0, new Date(story.expiresAt).getTime() - Date.now());
+      const hoursLeft = Math.max(1, Math.ceil(msLeft / (1000 * 60 * 60)));
+      remainingText = `${hoursLeft}h left`;
+    }
+    if (timeBadge) {
+      timeBadge.innerText = `⏳ ${remainingText || '24h'}`;
+      timeBadge.title = `This story will automatically be deleted after 24 hours (${remainingText || '24h left'})`;
+    }
+
+    // Story delete button for owner
+    const currentUserId = window.CS_STATE.currentUser?._id;
+    const isOwner =
+      currentUserId &&
+      (user._id === currentUserId ||
+        (story.user?._id || story.user).toString() === currentUserId.toString());
+    if (deleteBtn) {
+      deleteBtn.style.display = isOwner ? 'flex' : 'none';
+    }
+
     if (captionEl) {
       if (story.caption) {
         captionEl.innerText = story.caption;
@@ -188,6 +218,47 @@ const storiesController = {
     if (storiesController.activeProgressInterval) {
       clearInterval(storiesController.activeProgressInterval);
       storiesController.activeProgressInterval = null;
+    }
+  },
+
+  // Delete current active story manually
+  deleteCurrentStory: async () => {
+    storiesController.clearTimers();
+    const groups = window.CS_STATE.storiesGrouped;
+    const group = groups[storiesController.currentUserGroupIndex];
+    if (!group || !group.stories || !group.stories[storiesController.currentSegmentIndex]) return;
+
+    const story = group.stories[storiesController.currentSegmentIndex];
+    if (!confirm('Are you sure you want to delete this story?')) {
+      storiesController.showCurrentStory();
+      return;
+    }
+
+    try {
+      await window.CS_API.stories.delete(story._id);
+      window.CS_UI.showToast('Story deleted', 'success');
+
+      // Reload stories
+      const storiesRes = await window.CS_API.stories.getAll();
+      window.CS_STATE.storiesGrouped = storiesRes.data || [];
+      storiesController.renderStoriesBar(window.CS_STATE.storiesGrouped);
+
+      // Check if user still has stories
+      const updatedGroup = window.CS_STATE.storiesGrouped.find(
+        (g) => (g.user?._id || g.user) === group.user?._id
+      );
+      if (updatedGroup && updatedGroup.stories.length > 0) {
+        storiesController.currentSegmentIndex = Math.min(
+          storiesController.currentSegmentIndex,
+          updatedGroup.stories.length - 1
+        );
+        storiesController.showCurrentStory();
+      } else {
+        storiesController.closeViewer();
+      }
+    } catch (err) {
+      window.CS_UI.showToast(err.message, 'error');
+      storiesController.showCurrentStory();
     }
   },
 
@@ -269,7 +340,7 @@ const storiesController = {
           storiesController.renderStoriesBar(window.CS_STATE.storiesGrouped);
 
           window.CS_UI.closeModal('createStoryModal');
-          window.CS_UI.showToast('Story added to your circle! 🌟', 'success');
+          window.CS_UI.showToast('Story added to your circle! It will disappear after 24 hours. 🌟', 'success');
           form.reset();
           if (previewContainer) previewContainer.style.display = 'none';
         } catch (err) {
