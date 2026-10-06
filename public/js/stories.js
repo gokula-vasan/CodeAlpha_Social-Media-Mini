@@ -21,25 +21,59 @@ const storiesController = {
     container.style.display = 'flex';
     let html = '';
 
-    if (currentUser) {
-      html += `
-        <!-- Add Story Item -->
-        <div class="story-item" onclick="window.CS_STORIES.openCreateStoryModal()">
-          <div class="story-add-wrapper">
-            <img src="${currentUser.avatar || window.CS_UI.getDefaultAvatar(currentUser.name)}" alt="You" class="avatar avatar-sm">
-            <div class="story-add-badge">+</div>
-          </div>
-          <span class="story-username">Your Story</span>
-        </div>
-      `;
+    // Check if the currently logged-in user has active stories
+    let myGroupIndex = -1;
+    if (currentUser && hasStories) {
+      const myId = (currentUser._id || '').toString();
+      const myUsername = (currentUser.username || '').toLowerCase();
+      myGroupIndex = userStoriesList.findIndex((g) => {
+        const uid = (g.user?._id || g.user || '').toString();
+        const uname = (g.user?.username || '').toLowerCase();
+        return (myId && uid === myId) || (myUsername && uname === myUsername);
+      });
     }
 
+    const myStoryGroup = myGroupIndex !== -1 ? userStoriesList[myGroupIndex] : null;
+
+    if (currentUser) {
+      if (myStoryGroup && myStoryGroup.stories && myStoryGroup.stories.length > 0) {
+        // Current user has active stories:
+        // Clicking "Your Story" opens the viewer so they can view and delete their stories
+        // Clicking the '+' badge opens the create story modal to add another story
+        html += `
+          <!-- Your Story (Active) -->
+          <div class="story-item" onclick="window.CS_STORIES.openViewer(${myGroupIndex}, 0)" title="View your story (click to view or delete)">
+            <div class="story-avatar-wrapper has-my-story">
+              <img src="${currentUser.avatar || window.CS_UI.getDefaultAvatar(currentUser.name)}" alt="Your Story" class="avatar">
+              <div class="story-add-badge" onclick="event.stopPropagation(); window.CS_STORIES.openCreateStoryModal()" title="Add another story">+</div>
+            </div>
+            <span class="story-username">Your Story</span>
+          </div>
+        `;
+      } else {
+        // Current user has no active stories:
+        // Clicking opens Create Story modal
+        html += `
+          <!-- Add Story Item -->
+          <div class="story-item" onclick="window.CS_STORIES.openCreateStoryModal()" title="Add to your story">
+            <div class="story-add-wrapper">
+              <img src="${currentUser.avatar || window.CS_UI.getDefaultAvatar(currentUser.name)}" alt="You" class="avatar avatar-sm">
+              <div class="story-add-badge">+</div>
+            </div>
+            <span class="story-username">Your Story</span>
+          </div>
+        `;
+      }
+    }
+
+    // Render other users' stories (filter out current user to avoid duplicate bubble)
     if (hasStories) {
       userStoriesList.forEach((group, groupIdx) => {
+        if (groupIdx === myGroupIndex) return; // Already represented in "Your Story"
         const user = group.user;
         if (!user) return;
         html += `
-          <div class="story-item" onclick="window.CS_STORIES.openViewer(${groupIdx}, 0)">
+          <div class="story-item" onclick="window.CS_STORIES.openViewer(${groupIdx}, 0)" title="View ${user.username}'s story">
             <div class="story-avatar-wrapper">
               <img src="${user.avatar || window.CS_UI.getDefaultAvatar(user.name)}" alt="${user.name}" class="avatar">
             </div>
@@ -135,14 +169,22 @@ const storiesController = {
       timeBadge.title = `This story will automatically be deleted after 24 hours (${remainingText || '24h left'})`;
     }
 
-    // Story delete button for owner
-    const currentUserId = window.CS_STATE.currentUser?._id;
+    // Story delete button: ONLY shown to the person who posted it
+    const currentUserId = (window.CS_STATE.currentUser?._id || '').toString();
+    const currentUsername = (window.CS_STATE.currentUser?.username || '').toLowerCase();
+    const storyUserId = (story.user?._id || story.user || '').toString();
+    const groupUserId = (user?._id || user || '').toString();
+    const storyUsername = (story.user?.username || user?.username || '').toLowerCase();
+
     const isOwner =
-      currentUserId &&
-      (user._id === currentUserId ||
-        (story.user?._id || story.user).toString() === currentUserId.toString());
+      Boolean(currentUserId && (currentUserId === storyUserId || currentUserId === groupUserId)) ||
+      Boolean(currentUsername && currentUsername === storyUsername);
+
     if (deleteBtn) {
       deleteBtn.style.display = isOwner ? 'flex' : 'none';
+      if (isOwner) {
+        deleteBtn.title = 'Delete your story';
+      }
     }
 
     if (captionEl) {
@@ -221,7 +263,7 @@ const storiesController = {
     }
   },
 
-  // Delete current active story manually
+  // Delete current active story manually (strictly for the story owner)
   deleteCurrentStory: async () => {
     storiesController.clearTimers();
     const groups = window.CS_STATE.storiesGrouped;
@@ -229,36 +271,82 @@ const storiesController = {
     if (!group || !group.stories || !group.stories[storiesController.currentSegmentIndex]) return;
 
     const story = group.stories[storiesController.currentSegmentIndex];
-    if (!confirm('Are you sure you want to delete this story?')) {
+    const storyUser = group.user;
+
+    // Strict frontend verification: only the owner can trigger delete
+    const currentUserId = (window.CS_STATE.currentUser?._id || '').toString();
+    const currentUsername = (window.CS_STATE.currentUser?.username || '').toLowerCase();
+    const storyUserId = (story.user?._id || story.user || storyUser?._id || '').toString();
+    const storyUsername = (story.user?.username || storyUser?.username || '').toLowerCase();
+
+    const isOwner =
+      Boolean(currentUserId && (currentUserId === storyUserId || currentUserId === (storyUser?._id || '').toString())) ||
+      Boolean(currentUsername && (currentUsername === storyUsername || currentUsername === (storyUser?.username || '').toLowerCase()));
+
+    if (!isOwner) {
+      window.CS_UI.showToast('You can only delete your own stories', 'error');
+      storiesController.showCurrentStory();
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this story? It cannot be undone.')) {
       storiesController.showCurrentStory();
       return;
     }
 
     try {
       await window.CS_API.stories.delete(story._id);
-      window.CS_UI.showToast('Story deleted', 'success');
+      window.CS_UI.showToast('Story deleted successfully', 'success');
 
-      // Reload stories
+      // Reload stories from server
       const storiesRes = await window.CS_API.stories.getAll();
       window.CS_STATE.storiesGrouped = storiesRes.data || [];
       storiesController.renderStoriesBar(window.CS_STATE.storiesGrouped);
 
-      // Check if user still has stories
-      const updatedGroup = window.CS_STATE.storiesGrouped.find(
-        (g) => (g.user?._id || g.user) === group.user?._id
-      );
-      if (updatedGroup && updatedGroup.stories.length > 0) {
+      // Refresh profile header if currently on profile view
+      if (window.CS_STATE.currentView === 'profile' && window.CS_PROFILE && window.CS_STATE.currentProfileUser) {
+        window.CS_PROFILE.renderProfileHeader(window.CS_STATE.currentProfileUser);
+      }
+
+      // Check if this user still has remaining stories
+      const updatedGroupIndex = window.CS_STATE.storiesGrouped.findIndex((g) => {
+        const uid = String(g.user?._id || g.user || '');
+        const uname = String(g.user?.username || '').toLowerCase();
+        return (storyUserId && uid === storyUserId) || (storyUsername && uname === storyUsername);
+      });
+
+      if (updatedGroupIndex !== -1) {
+        const updatedGroup = window.CS_STATE.storiesGrouped[updatedGroupIndex];
+        storiesController.currentUserGroupIndex = updatedGroupIndex;
         storiesController.currentSegmentIndex = Math.min(
           storiesController.currentSegmentIndex,
           updatedGroup.stories.length - 1
         );
         storiesController.showCurrentStory();
       } else {
+        // No remaining stories for this user: close viewer cleanly
         storiesController.closeViewer();
       }
     } catch (err) {
-      window.CS_UI.showToast(err.message, 'error');
+      window.CS_UI.showToast(err.message || 'Failed to delete story', 'error');
       storiesController.showCurrentStory();
+    }
+  },
+
+  // Open story viewer directly for a specific user ID or username
+  openViewerForUser: (userIdOrUsername) => {
+    const groups = window.CS_STATE.storiesGrouped || [];
+    const target = String(userIdOrUsername || '');
+    const idx = groups.findIndex((g) => {
+      const uid = String(g.user?._id || g.user || '');
+      const uname = String(g.user?.username || '');
+      return (target && uid === target) || (target && uname.toLowerCase() === target.toLowerCase());
+    });
+
+    if (idx !== -1) {
+      storiesController.openViewer(idx, 0);
+    } else {
+      window.CS_UI.showToast('No active stories found for this user', 'info');
     }
   },
 
@@ -338,6 +426,11 @@ const storiesController = {
           const storiesRes = await window.CS_API.stories.getAll();
           window.CS_STATE.storiesGrouped = storiesRes.data || [];
           storiesController.renderStoriesBar(window.CS_STATE.storiesGrouped);
+
+          // Also refresh profile header if viewing a profile
+          if (window.CS_STATE.currentView === 'profile' && window.CS_PROFILE && window.CS_STATE.currentProfileUser) {
+            window.CS_PROFILE.renderProfileHeader(window.CS_STATE.currentProfileUser);
+          }
 
           window.CS_UI.closeModal('createStoryModal');
           window.CS_UI.showToast('Story added to your circle! It will disappear after 24 hours. 🌟', 'success');

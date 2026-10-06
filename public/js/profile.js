@@ -81,24 +81,61 @@ const profileController = {
     const followersCount = user.followersCount || (user.followers ? user.followers.length : 0);
     const followingCount = user.followingCount || (user.following ? user.following.length : 0);
 
+    // Check if this profile user has active stories
+    const userStoriesGroup = (window.CS_STATE.storiesGrouped || []).find((g) => {
+      const uid = String(g.user?._id || g.user || '');
+      const uname = String(g.user?.username || '').toLowerCase();
+      const targetId = String(user._id || '');
+      const targetName = String(user.username || '').toLowerCase();
+      return (targetId && uid === targetId) || (targetName && uname === targetName);
+    });
+    const hasActiveStory = Boolean(userStoriesGroup && userStoriesGroup.stories && userStoriesGroup.stories.length > 0);
+
     headerContainer.innerHTML = `
       <div class="profile-main-info">
-        <img src="${user.avatar || window.CS_UI.getDefaultAvatar(user.name)}" alt="${user.name}" class="profile-avatar-large">
+        <div class="profile-avatar-wrapper ${hasActiveStory ? 'has-active-story' : ''}" 
+             ${hasActiveStory ? `onclick="window.CS_STORIES.openViewerForUser('${user.username}')" style="cursor: pointer;" title="${isSelf ? 'View your story (click to view or delete)' : `View ${user.username}\'s story`}"` : ''}>
+          <img src="${user.avatar || window.CS_UI.getDefaultAvatar(user.name)}" alt="${user.name}" class="profile-avatar-large ${hasActiveStory ? 'has-story-ring' : ''}">
+          ${hasActiveStory ? `<span class="profile-story-badge" title="Active story">Story</span>` : ''}
+        </div>
         <div class="profile-user-meta">
           <div class="profile-top-row">
             <h2 class="profile-username-title">@${user.username}</h2>
             ${
               isSelf
                 ? `
-              <button class="btn btn-secondary btn-sm" onclick="window.CS_PROFILE.openEditModal()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                Edit Profile
-              </button>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                ${
+                  hasActiveStory
+                    ? `<button class="btn btn-primary btn-sm" onclick="window.CS_STORIES.openViewerForUser('${user.username}')" title="View your story (click to view or delete)">
+                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                         View Story
+                       </button>`
+                    : `<button class="btn btn-secondary btn-sm" onclick="window.CS_STORIES.openCreateStoryModal()" title="Add to your story">
+                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                         Add Story
+                       </button>`
+                }
+                <button class="btn btn-secondary btn-sm" onclick="window.CS_PROFILE.openEditModal()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                  Edit Profile
+                </button>
+              </div>
             `
                 : `
-              <button class="btn-follow-toggle ${user.isFollowing ? 'following' : 'follow'}" id="profile-follow-btn" onclick="window.CS_PROFILE.toggleFollow('${user._id}')">
-                ${user.isFollowing ? 'Following' : 'Follow'}
-              </button>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                ${
+                  hasActiveStory
+                    ? `<button class="btn btn-secondary btn-sm" onclick="window.CS_STORIES.openViewerForUser('${user.username}')" title="View ${user.username}'s story">
+                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                         Watch Story
+                       </button>`
+                    : ''
+                }
+                <button class="btn-follow-toggle ${user.isFollowing ? 'following' : 'follow'}" id="profile-follow-btn" onclick="window.CS_PROFILE.toggleFollow('${user._id}')">
+                  ${user.isFollowing ? 'Following' : 'Follow'}
+                </button>
+              </div>
             `
             }
           </div>

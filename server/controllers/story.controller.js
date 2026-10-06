@@ -162,11 +162,11 @@ exports.deleteStory = async (req, res) => {
       });
     }
 
-    // Check ownership
+    // Check ownership: strictly only the user who posted the story can delete it
     if (story.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
-        message: 'You are not authorized to delete this story',
+        message: 'You are not authorized to delete this story. Only the user who posted it can delete it.',
       });
     }
 
