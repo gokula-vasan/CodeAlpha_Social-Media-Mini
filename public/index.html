@@ -192,8 +192,23 @@
           <div class="profile-header-card" id="profileHeaderContent">
             <!-- Dynamically populated -->
           </div>
-          <div class="profile-posts-grid" id="profilePostsGrid">
-            <!-- Dynamically populated -->
+          <div class="profile-tab-content" id="profileTabContent">
+            <!-- 1. Posts Grid View -->
+            <div class="profile-posts-grid" id="profilePostsGrid">
+              <!-- Dynamically populated -->
+            </div>
+            <!-- 2. Followers Tab View -->
+            <div class="profile-follow-list-card" id="profileFollowersContainer" style="display: none;">
+              <!-- Dynamically populated -->
+            </div>
+            <!-- 3. Following Tab View -->
+            <div class="profile-follow-list-card" id="profileFollowingContainer" style="display: none;">
+              <!-- Dynamically populated -->
+            </div>
+            <!-- 4. Saved Posts Tab View -->
+            <div class="profile-posts-grid" id="profileSavedGrid" style="display: none;">
+              <!-- Dynamically populated -->
+            </div>
           </div>
         </div>
 
@@ -569,6 +584,41 @@
             Create new account
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. FOLLOWERS & FOLLOWING MODAL -->
+  <div class="modal-overlay" id="followListModal">
+    <div class="modal-card" style="max-width: 460px;">
+      <div class="modal-header">
+        <div class="follow-modal-tabs">
+          <button class="follow-modal-tab active" id="followModalTabFollowers" onclick="window.CS_PROFILE.switchFollowModalTab('followers')">
+            Followers <span class="follow-badge-count" id="followModalCountFollowers">0</span>
+          </button>
+          <button class="follow-modal-tab" id="followModalTabFollowing" onclick="window.CS_PROFILE.switchFollowModalTab('following')">
+            Following <span class="follow-badge-count" id="followModalCountFollowing">0</span>
+          </button>
+        </div>
+        <button class="modal-close-btn" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 14px 16px;">
+        <div class="follow-search-box" style="margin-bottom: 12px;">
+          <input type="text" id="followListSearchInput" class="form-control" placeholder="Search people..." oninput="window.CS_PROFILE.filterFollowList(this.value)">
+        </div>
+        <div class="follow-modal-list" id="followModalListContainer">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. POST DETAIL PREVIEW MODAL -->
+  <div class="modal-overlay" id="postDetailModal">
+    <div class="modal-card post-detail-modal-card">
+      <button class="modal-close-btn post-detail-close-btn" aria-label="Close">✕</button>
+      <div class="post-detail-layout" id="postDetailModalContent">
+        <!-- Dynamically populated -->
       </div>
     </div>
   </div>

@@ -11,8 +11,8 @@ exports.getUserProfile = async (req, res) => {
     const username = rawUsername.replace(/^@/, '').trim().toLowerCase();
     const user = await User.findOne({ username })
       .select('-password')
-      .populate('followers', 'name username avatar')
-      .populate('following', 'name username avatar');
+      .populate('followers', 'name username avatar bio')
+      .populate('following', 'name username avatar bio');
 
     if (!user) {
       return res.status(404).json({
@@ -27,10 +27,44 @@ exports.getUserProfile = async (req, res) => {
       .populate('user', 'name username avatar');
 
     const currentUserId = req.user ? req.user._id.toString() : null;
+    const currentUserFollowingIds = req.user
+      ? (req.user.following || []).map((id) => id.toString())
+      : [];
+
     const isFollowing = currentUserId
       ? user.followers.some((f) => f._id.toString() === currentUserId)
       : false;
     const isSelf = currentUserId === user._id.toString();
+
+    // Enrich followers list
+    const enrichedFollowers = user.followers.map((f) => {
+      const fObj = f.toObject ? f.toObject() : (f._doc || f);
+      const fId = (fObj._id || f._id).toString();
+      return {
+        _id: fId,
+        name: fObj.name,
+        username: fObj.username,
+        avatar: fObj.avatar,
+        bio: fObj.bio,
+        isFollowing: !!(currentUserId && currentUserFollowingIds.includes(fId)),
+        isSelf: !!(currentUserId && currentUserId === fId),
+      };
+    });
+
+    // Enrich following list
+    const enrichedFollowing = user.following.map((f) => {
+      const fObj = f.toObject ? f.toObject() : (f._doc || f);
+      const fId = (fObj._id || f._id).toString();
+      return {
+        _id: fId,
+        name: fObj.name,
+        username: fObj.username,
+        avatar: fObj.avatar,
+        bio: fObj.bio,
+        isFollowing: !!(currentUserId && currentUserFollowingIds.includes(fId)),
+        isSelf: !!(currentUserId && currentUserId === fId),
+      };
+    });
 
     // Format posts
     const formattedPosts = posts.map((post) => {
@@ -56,8 +90,8 @@ exports.getUserProfile = async (req, res) => {
         postsCount: posts.length,
         isFollowing,
         isSelf,
-        followers: user.followers,
-        following: user.following,
+        followers: enrichedFollowers,
+        following: enrichedFollowing,
       },
       posts: formattedPosts,
     });

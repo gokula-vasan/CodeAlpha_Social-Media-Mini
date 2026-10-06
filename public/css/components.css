@@ -1071,12 +1071,35 @@
   gap: 6px;
   font-size: 0.95rem;
   color: var(--text-secondary);
+  user-select: none;
+}
+
+.profile-stat.clickable {
+  cursor: pointer;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.profile-stat.clickable:hover {
+  background: var(--bg-surface-elevated);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.profile-stat.clickable:active {
+  transform: scale(0.97);
 }
 
 .profile-stat strong {
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--text-primary);
+}
+
+.profile-stat.clickable:hover strong {
+  color: var(--primary);
 }
 
 .profile-bio-text {
@@ -1101,14 +1124,15 @@
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 20px;
   justify-content: center;
-  gap: 40px;
+  gap: 32px;
+  overflow-x: auto;
 }
 
 .profile-tab-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 10px;
+  padding: 14px 12px;
   font-size: 0.88rem;
   font-weight: 700;
   color: var(--text-muted);
@@ -1116,6 +1140,12 @@
   position: relative;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: color var(--transition-fast);
+}
+
+.profile-tab-item:hover {
+  color: var(--text-primary);
 }
 
 .profile-tab-item.active {
@@ -1130,6 +1160,22 @@
   right: 0;
   height: 2px;
   background: var(--primary);
+}
+
+.tab-count-badge {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+}
+
+.profile-tab-item.active .tab-count-badge {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: var(--primary);
 }
 
 /* Profile 3-Column Grid */
@@ -1389,4 +1435,296 @@
   background: rgba(16, 185, 129, 0.12);
   border-radius: var(--radius-full);
 }
+
+/* ==========================================================================
+   FOLLOWERS & FOLLOWING VIEWS & MODAL
+   ========================================================================== */
+.profile-follow-list-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.follow-user-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface-elevated);
+  transition: all 0.2s ease;
+}
+
+.follow-user-card:hover {
+  border-color: var(--border-focus);
+  background: var(--bg-surface-hover);
+  transform: translateX(2px);
+}
+
+.follow-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.follow-user-names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.follow-user-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.follow-user-username {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.follow-user-bio {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 3px;
+  max-width: 300px;
+}
+
+.follow-self-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 5px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+}
+
+/* Modal Tabs */
+.follow-modal-tabs {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.follow-modal-tab {
+  background: none;
+  border: none;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px 4px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color var(--transition-fast);
+}
+
+.follow-modal-tab.active {
+  color: var(--text-primary);
+}
+
+.follow-modal-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+.follow-badge-count {
+  font-size: 0.75rem;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+}
+
+.follow-modal-tab.active .follow-badge-count {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: var(--primary);
+}
+
+.follow-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* ==========================================================================
+   POST DETAIL MODAL (Rich Preview)
+   ========================================================================== */
+.post-detail-modal-card {
+  max-width: 920px;
+  width: 95%;
+  height: 82vh;
+  max-height: 720px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  display: flex;
+  position: relative;
+}
+
+.post-detail-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+}
+
+.post-detail-close-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.08);
+}
+
+.post-detail-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-surface);
+}
+
+.post-detail-media-col {
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.post-detail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.post-detail-info-col {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-color);
+  min-width: 0;
+}
+
+.post-detail-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.post-detail-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.post-detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.post-detail-caption-box {
+  display: flex;
+  gap: 12px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.post-detail-comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 14px;
+}
+
+.post-detail-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 12px 18px;
+  background: var(--bg-surface-elevated);
+}
+
+.post-detail-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.post-detail-add-comment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .post-detail-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 280px 1fr;
+    overflow-y: auto;
+  }
+  .post-detail-info-col {
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+  }
+}
+
 
