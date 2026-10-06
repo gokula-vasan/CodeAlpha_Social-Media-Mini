@@ -157,19 +157,7 @@ const storiesController = {
       };
     }
 
-    // Time remaining badge (stories auto-delete after 24 hours)
-    let remainingText = story.timeRemainingFormatted;
-    if (!remainingText && story.expiresAt) {
-      const msLeft = Math.max(0, new Date(story.expiresAt).getTime() - Date.now());
-      const hoursLeft = Math.max(1, Math.ceil(msLeft / (1000 * 60 * 60)));
-      remainingText = `${hoursLeft}h left`;
-    }
-    if (timeBadge) {
-      timeBadge.innerText = `⏳ ${remainingText || '24h'}`;
-      timeBadge.title = `This story will automatically be deleted after 24 hours (${remainingText || '24h left'})`;
-    }
-
-    // Story delete button: ONLY shown to the person who posted it
+    // Determine story ownership: strictly only the creator is the owner
     const currentUserId = (window.CS_STATE.currentUser?._id || '').toString();
     const currentUsername = (window.CS_STATE.currentUser?.username || '').toLowerCase();
     const storyUserId = (story.user?._id || story.user || '').toString();
@@ -180,6 +168,35 @@ const storiesController = {
       Boolean(currentUserId && (currentUserId === storyUserId || currentUserId === groupUserId)) ||
       Boolean(currentUsername && currentUsername === storyUsername);
 
+    // Time left: ONLY shown to the person who posted the story; NOT to others
+    if (timeBadge) {
+      if (isOwner) {
+        // Owner sees the countdown of time left before automatic deletion
+        let remainingText = story.timeRemainingFormatted;
+        if (!remainingText && story.expiresAt) {
+          const msLeft = Math.max(0, new Date(story.expiresAt).getTime() - Date.now());
+          const hoursLeft = Math.max(1, Math.ceil(msLeft / (1000 * 60 * 60)));
+          remainingText = `${hoursLeft}h left`;
+        }
+        timeBadge.style.display = 'inline-flex';
+        timeBadge.className = 'story-time-badge story-time-left-badge';
+        timeBadge.innerText = `⏳ ${remainingText || '24h left'}`;
+        timeBadge.title = `Time left before this story is deleted: ${remainingText || '24h left'}`;
+      } else {
+        // Other users do NOT see "time left"; they see standard time elapsed (e.g. "2h ago")
+        const timeAgo = story.createdAt ? window.CS_UI.formatTimeAgo(story.createdAt) : '';
+        if (timeAgo) {
+          timeBadge.style.display = 'inline-flex';
+          timeBadge.className = 'story-time-badge story-time-ago-badge';
+          timeBadge.innerText = timeAgo;
+          timeBadge.title = `Posted ${timeAgo}`;
+        } else {
+          timeBadge.style.display = 'none';
+        }
+      }
+    }
+
+    // Story delete button: ONLY shown to the person who posted it
     if (deleteBtn) {
       deleteBtn.style.display = isOwner ? 'flex' : 'none';
       if (isOwner) {

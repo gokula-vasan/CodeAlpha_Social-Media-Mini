@@ -61,6 +61,12 @@ exports.getStories = async (req, res) => {
       const timeRemainingMs = Math.max(0, new Date(story.expiresAt).getTime() - now.getTime());
       const hoursRemaining = Math.max(1, Math.ceil(timeRemainingMs / (1000 * 60 * 60)));
 
+      const isOwner =
+        req.user &&
+        req.user._id &&
+        story.user &&
+        (story.user._id || story.user).toString() === req.user._id.toString();
+
       const storyObj = {
         _id: story._id,
         user: story.user,
@@ -68,8 +74,12 @@ exports.getStories = async (req, res) => {
         caption: story.caption,
         createdAt: story.createdAt,
         expiresAt: story.expiresAt,
-        timeRemainingHours: hoursRemaining,
-        timeRemainingFormatted: `${hoursRemaining}h left`,
+        ...(isOwner
+          ? {
+              timeRemainingHours: hoursRemaining,
+              timeRemainingFormatted: `${hoursRemaining}h left`,
+            }
+          : {}),
       };
 
       if (!userStoriesMap[userId]) {

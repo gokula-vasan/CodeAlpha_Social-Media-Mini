@@ -1038,12 +1038,24 @@
 .story-time-badge {
   font-size: 0.72rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(0, 0, 0, 0.45);
   padding: 3px 8px;
   border-radius: var(--radius-full);
   letter-spacing: 0.3px;
   backdrop-filter: blur(4px);
+  display: inline-flex;
+  align-items: center;
+}
+
+.story-time-left-badge {
+  color: #fbbf24;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.story-time-ago-badge {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .story-delete-btn {
