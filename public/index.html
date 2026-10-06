@@ -93,7 +93,7 @@
         </button>
 
         <!-- Login Prompt if guest -->
-        <button class="btn btn-primary btn-sm" id="sidebarLoginBtn" style="width: 100%; display: flex;" onclick="window.CS_AUTH.openAuthModal('login')">
+        <button class="btn btn-primary btn-sm" id="sidebarLoginBtn" style="width: 100%; display: flex;" onclick="window.CS_AUTH.navigateToLogin()">
           Sign In
         </button>
 
@@ -486,6 +486,9 @@
             <input type="password" id="loginPasswordInput" placeholder="••••••••" required>
           </div>
           <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Log In</button>
+          <p style="text-align: center; margin-top: 14px; font-size: 0.88rem; color: var(--text-muted);">
+            Don't have an account? <a href="#register" onclick="event.preventDefault(); window.CS_AUTH.navigateToRegister();" style="color: var(--primary); font-weight: 600; text-decoration: underline;">Create new account</a>
+          </p>
         </form>
 
         <!-- REGISTER FORM -->
@@ -511,6 +514,9 @@
             <input type="text" id="regBioInput" placeholder="Brief tagline or bio...">
           </div>
           <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Create Account</button>
+          <p style="text-align: center; margin-top: 14px; font-size: 0.88rem; color: var(--text-muted);">
+            Already have an account? <a href="#login" onclick="event.preventDefault(); window.CS_AUTH.navigateToLogin();" style="color: var(--primary); font-weight: 600; text-decoration: underline;">Log In</a>
+          </p>
         </form>
       </div>
     </div>
@@ -554,11 +560,11 @@
         </div>
 
         <div style="border-top: 1px solid var(--border-color); padding-top: 14px; display: flex; flex-direction: column; gap: 8px;">
-          <button class="btn btn-secondary" style="width: 100%;" onclick="window.CS_AUTH.openAuthModal('login')">
+          <button class="btn btn-secondary" style="width: 100%;" onclick="window.CS_AUTH.navigateToLogin()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
             Log in to another account
           </button>
-          <button class="btn btn-secondary" style="width: 100%;" onclick="window.CS_AUTH.openAuthModal('register')">
+          <button class="btn btn-secondary" style="width: 100%;" onclick="window.CS_AUTH.navigateToRegister()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             Create new account
           </button>

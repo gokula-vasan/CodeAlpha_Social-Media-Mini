@@ -31,7 +31,19 @@ const app = {
       app.checkNotifications(),
     ]);
 
+    // 6. Handle URL routing (#login, #register)
+    app.handleUrlRouting();
+
     console.log('✅ ConnectSphere Ready!');
+  },
+
+  handleUrlRouting: () => {
+    const hash = window.location.hash.toLowerCase();
+    if (hash === '#login') {
+      window.CS_AUTH.navigateToLogin();
+    } else if (hash === '#register' || hash === '#signup') {
+      window.CS_AUTH.navigateToRegister();
+    }
   },
 
   // Theme Management
@@ -90,7 +102,7 @@ const app = {
     });
 
     if (type === 'following' && !window.CS_STATE.isLoggedIn()) {
-      window.CS_AUTH.openAuthModal('login');
+      window.CS_AUTH.navigateToLogin();
       window.CS_UI.showToast('Log in to see posts from creators you follow', 'info');
       // Reset back to for you visually until logged in
       app.switchFeedTab('foryou');
@@ -213,7 +225,7 @@ const app = {
   toggleFollowUser: async (event, userId, btnElement) => {
     event.stopPropagation();
     if (!window.CS_STATE.isLoggedIn()) {
-      window.CS_AUTH.openAuthModal('login');
+      window.CS_AUTH.navigateToLogin();
       window.CS_UI.showToast('Please log in to follow creators', 'info');
       return;
     }
@@ -237,7 +249,7 @@ const app = {
   openProfile: (username) => {
     const targetUsername = username || window.CS_STATE.currentUser?.username;
     if (!targetUsername) {
-      window.CS_AUTH.openAuthModal('login');
+      window.CS_AUTH.navigateToLogin();
       return;
     }
     window.CS_PROFILE.loadProfile(targetUsername);
@@ -432,6 +444,11 @@ const app = {
         app.handleLiveSearch(e.target.value);
       });
     }
+
+    // Hash routing listener
+    window.addEventListener('hashchange', () => {
+      app.handleUrlRouting();
+    });
   },
 };
 

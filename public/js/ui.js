@@ -84,6 +84,10 @@ const ui = {
 
   // Modal controls
   openModal: (modalId) => {
+    // Automatically close other active overlays so they don't layer or block clicks
+    document.querySelectorAll('.modal-overlay.active').forEach((m) => {
+      if (m.id !== modalId) m.classList.remove('active');
+    });
     const modal = document.getElementById(modalId);
     if (modal) {
       modal.classList.add('active');
@@ -96,6 +100,9 @@ const ui = {
     if (modal) {
       modal.classList.remove('active');
       document.body.style.overflow = '';
+      if (window.location.hash === '#login' || window.location.hash === '#register' || window.location.hash === '#signup') {
+        try { history.replaceState(null, '', window.location.pathname); } catch (_) {}
+      }
     }
   },
 

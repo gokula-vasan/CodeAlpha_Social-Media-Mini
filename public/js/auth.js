@@ -2,16 +2,51 @@
 const authController = {
   currentTab: 'login',
 
+  // Navigate directly to the login page/modal
+  navigateToLogin: (prefillUsername = '') => {
+    window.CS_UI.closeModal('switchAccountModal');
+    authController.openAuthModal('login', prefillUsername);
+    try {
+      history.pushState(null, '', '#login');
+    } catch (_) {}
+  },
+
+  // Navigate directly to the create new account page/modal
+  navigateToRegister: () => {
+    window.CS_UI.closeModal('switchAccountModal');
+    authController.openAuthModal('register');
+    try {
+      history.pushState(null, '', '#register');
+    } catch (_) {}
+  },
+
   // Open auth modal
   openAuthModal: (tab = 'login', prefillUsername = '') => {
+    window.CS_UI.closeModal('switchAccountModal');
     authController.switchAuthTab(tab);
-    if (prefillUsername) {
+
+    const titleEl = document.querySelector('#authModal .modal-title');
+    if (titleEl) {
+      titleEl.innerText = tab === 'login' ? 'Log In to Another Account' : 'Create a New Account';
+    }
+
+    if (tab === 'login') {
       const input = document.getElementById('loginIdentifierInput');
-      if (input) input.value = prefillUsername;
-      const pwInput = document.getElementById('loginPasswordInput');
-      if (pwInput) {
-        pwInput.value = '';
-        setTimeout(() => pwInput.focus(), 150);
+      if (input) {
+        input.value = prefillUsername || '';
+        setTimeout(() => {
+          if (prefillUsername) {
+            document.getElementById('loginPasswordInput')?.focus();
+          } else {
+            input.focus();
+          }
+        }, 150);
+      }
+    } else {
+      const nameInput = document.getElementById('regNameInput');
+      if (nameInput) {
+        nameInput.value = '';
+        setTimeout(() => nameInput.focus(), 150);
       }
     }
     window.CS_UI.openModal('authModal');
