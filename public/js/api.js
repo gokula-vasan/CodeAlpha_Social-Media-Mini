@@ -101,11 +101,11 @@ const api = {
       });
       return handleResponse(res);
     },
-    addComment: async (id, text) => {
+    addComment: async (id, text, replyTo = null) => {
       const res = await fetch(`${API_BASE}/posts/${id}/comment`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, replyTo }),
       });
       return handleResponse(res);
     },

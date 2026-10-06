@@ -606,22 +606,30 @@ const profileController = {
                   ? `<p style="color: var(--text-muted); font-size: 0.88rem; text-align: center; padding: 20px 0;">No comments yet. Start the conversation!</p>`
                   : comments
                       .map((c) => {
+                        const postOwnerId = (post.user?._id || post.user || '').toString();
+                        const commentUserId = (c.user?._id || c.user || '').toString();
+                        const isPostAuthor = commentUserId && postOwnerId && commentUserId === postOwnerId;
                         const commenterUsername = c.user?.username || 'user';
                         const commenterAvatar =
                           c.user?.avatar || window.CS_UI.getDefaultAvatar(c.user?.name || commenterUsername);
                         const canDelete =
                           currentUserId &&
-                          (currentUserId === c.user?._id || isOwner);
+                          (currentUserId === commentUserId || currentUserId === postOwnerId);
 
                         return `
-                        <div class="comment-item" id="detail-comment-${c._id}" style="display: flex; gap: 10px; align-items: flex-start;">
+                        <div class="comment-item ${isPostAuthor ? 'author-comment' : ''}" id="detail-comment-${c._id}" style="display: flex; gap: 10px; align-items: flex-start;">
                           <img src="${commenterAvatar}" alt="${commenterUsername}" class="avatar avatar-xs" style="margin-top: 2px;">
                           <div style="flex: 1; font-size: 0.88rem;">
                             <strong style="color: var(--text-primary); cursor: pointer;" onclick="window.CS_PROFILE.navigateToProfile('${commenterUsername}')">
                               ${commenterUsername}
                             </strong>
-                            <span style="margin-left: 6px; color: var(--text-primary);">${window.CS_UI.escapeHtml(c.text)}</span>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">${window.CS_UI.formatTimeAgo(c.createdAt)}</div>
+                            ${isPostAuthor ? `<span class="comment-badge-author">Author</span>` : ''}
+                            ${c.replyToUsername ? `<span class="comment-replying-tag">↪ @${c.replyToUsername}</span>` : ''}
+                            <span style="margin-left: 6px; color: var(--text-primary);">${window.CS_UI.formatTextWithTags(c.text)}</span>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+                              <span style="font-size: 0.75rem; color: var(--text-muted);">${window.CS_UI.formatTimeAgo(c.createdAt)}</span>
+                              <button type="button" class="comment-reply-btn" onclick="window.CS_PROFILE.startReplyInDetail('${post._id}', '${c._id}', '${commenterUsername}')">Reply</button>
+                            </div>
                           </div>
                           ${
                             canDelete
@@ -659,19 +667,53 @@ const profileController = {
               </button>
             </div>
 
-            <!-- Comment Input -->
-            <form onsubmit="window.CS_PROFILE.addCommentInDetail(event, '${post._id}')" class="post-detail-add-comment">
-              <input 
-                type="text" 
-                id="detailCommentInput-${post._id}" 
-                placeholder="Add a comment as @${window.CS_STATE.currentUser?.username || 'user'}..." 
-                style="flex: 1; padding: 10px 14px; border-radius: var(--radius-full); border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary); outline: none; font-size: 0.9rem;"
-                autocomplete="off"
-                required>
-              <button type="submit" class="btn btn-primary btn-sm" style="border-radius: var(--radius-full); padding: 8px 16px;">
-                Post
-              </button>
-            </form>
+            <!-- Reply Banner in Detail Modal -->
+            <div class="comment-reply-banner" id="detail-reply-banner-${post._id}" style="display: none; border-radius: var(--radius-sm); margin-bottom: 8px;">
+              <span>Replying to <strong id="detail-reply-user-${post._id}">@user</strong></span>
+              <button type="button" class="btn-cancel-reply" onclick="window.CS_PROFILE.cancelReplyInDetail('${post._id}')" title="Cancel reply">✕</button>
+            </div>
+
+            ${
+              isOwner
+                ? `
+              <!-- Post Author Mode: Only Reply Allowed -->
+              <div class="post-owner-comment-container" id="detail-owner-container-${post._id}">
+                <div class="post-owner-hint-box" id="detail-owner-hint-${post._id}" style="border: none; padding: 6px 0;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  <span>${comments.length > 0 ? 'Post author: click <strong>Reply</strong> on any comment to respond' : 'No comments yet. Viewers can comment on your post!'}</span>
+                </div>
+                <form id="detail-comment-form-${post._id}" onsubmit="window.CS_PROFILE.addCommentInDetail(event, '${post._id}')" class="post-detail-add-comment" style="display: none;">
+                  <input type="hidden" id="detail-reply-to-id-${post._id}" value="">
+                  <input 
+                    type="text" 
+                    id="detailCommentInput-${post._id}" 
+                    placeholder="Reply to comment as author..." 
+                    style="flex: 1; padding: 10px 14px; border-radius: var(--radius-full); border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary); outline: none; font-size: 0.9rem;"
+                    autocomplete="off"
+                    required>
+                  <button type="submit" class="btn btn-primary btn-sm" style="border-radius: var(--radius-full); padding: 8px 16px;">
+                    Reply
+                  </button>
+                </form>
+              </div>
+            `
+                : `
+              <!-- Other Users: Standard Comment Form -->
+              <form id="detail-comment-form-${post._id}" onsubmit="window.CS_PROFILE.addCommentInDetail(event, '${post._id}')" class="post-detail-add-comment">
+                <input type="hidden" id="detail-reply-to-id-${post._id}" value="">
+                <input 
+                  type="text" 
+                  id="detailCommentInput-${post._id}" 
+                  placeholder="Add a comment as @${window.CS_STATE.currentUser?.username || 'user'}..." 
+                  style="flex: 1; padding: 10px 14px; border-radius: var(--radius-full); border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary); outline: none; font-size: 0.9rem;"
+                  autocomplete="off"
+                  required>
+                <button type="submit" class="btn btn-primary btn-sm" style="border-radius: var(--radius-full); padding: 8px 16px;">
+                  Post
+                </button>
+              </form>
+            `
+            }
           </div>
         </div>
       `;
@@ -679,6 +721,56 @@ const profileController = {
       window.CS_UI.openModal('postDetailModal');
     } catch (err) {
       window.CS_UI.showToast(err.message, 'error');
+    }
+  },
+
+  // Start reply mode in Post Detail modal
+  startReplyInDetail: (postId, commentId, username) => {
+    if (!window.CS_STATE.isLoggedIn()) {
+      window.CS_AUTH.openAuthModal('login');
+      window.CS_UI.showToast('Please log in to reply', 'info');
+      return;
+    }
+
+    const replyIdInput = document.getElementById(`detail-reply-to-id-${postId}`);
+    const replyBanner = document.getElementById(`detail-reply-banner-${postId}`);
+    const replyUserSpan = document.getElementById(`detail-reply-user-${postId}`);
+    const form = document.getElementById(`detail-comment-form-${postId}`);
+    const ownerHint = document.getElementById(`detail-owner-hint-${postId}`);
+    const input = document.getElementById(`detailCommentInput-${postId}`);
+
+    if (replyIdInput) replyIdInput.value = commentId;
+    if (replyUserSpan) replyUserSpan.innerText = `@${username}`;
+    if (replyBanner) replyBanner.style.display = 'flex';
+    if (form) form.style.display = 'flex';
+    if (ownerHint) ownerHint.style.display = 'none';
+
+    if (input) {
+      input.placeholder = `Reply to @${username}...`;
+      input.value = `@${username} `;
+      input.focus();
+    }
+  },
+
+  // Cancel reply mode in Post Detail modal
+  cancelReplyInDetail: (postId) => {
+    const replyIdInput = document.getElementById(`detail-reply-to-id-${postId}`);
+    const replyBanner = document.getElementById(`detail-reply-banner-${postId}`);
+    const form = document.getElementById(`detail-comment-form-${postId}`);
+    const ownerHint = document.getElementById(`detail-owner-hint-${postId}`);
+    const input = document.getElementById(`detailCommentInput-${postId}`);
+
+    if (replyIdInput) replyIdInput.value = '';
+    if (replyBanner) replyBanner.style.display = 'none';
+
+    if (ownerHint) {
+      ownerHint.style.display = 'flex';
+      if (form) form.style.display = 'none';
+    }
+
+    if (input) {
+      input.value = '';
+      input.placeholder = `Add a comment as @${window.CS_STATE.currentUser?.username || 'user'}...`;
     }
   },
 
@@ -728,13 +820,17 @@ const profileController = {
     }
 
     const input = document.getElementById(`detailCommentInput-${postId}`);
+    const replyIdInput = document.getElementById(`detail-reply-to-id-${postId}`);
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
 
+    const replyTo = replyIdInput && replyIdInput.value ? replyIdInput.value : null;
+
     try {
-      const res = await window.CS_API.posts.addComment(postId, text);
+      const res = await window.CS_API.posts.addComment(postId, text, replyTo);
       input.value = '';
+      profileController.cancelReplyInDetail(postId);
 
       const container = document.getElementById('postDetailCommentsContainer');
       if (container) {
@@ -744,6 +840,11 @@ const profileController = {
         }
 
         const c = res.comment;
+        const post = profileController.profilePosts.find((p) => p._id === postId) || {};
+        const postOwnerId = (post.user?._id || post.user || window.CS_STATE.currentProfileUser?._id || '').toString();
+        const commentUserId = (c.user?._id || c.user || window.CS_STATE.currentUser?._id || '').toString();
+        const isPostAuthor = commentUserId && postOwnerId && commentUserId === postOwnerId;
+
         const commenterUsername = c.user?.username || window.CS_STATE.currentUser?.username || 'user';
         const commenterAvatar =
           c.user?.avatar ||
@@ -751,14 +852,19 @@ const profileController = {
           window.CS_UI.getDefaultAvatar(commenterUsername);
 
         const newCommentHTML = `
-          <div class="comment-item fade-in" id="detail-comment-${c._id}" style="display: flex; gap: 10px; align-items: flex-start;">
+          <div class="comment-item fade-in ${isPostAuthor ? 'author-comment' : ''}" id="detail-comment-${c._id}" style="display: flex; gap: 10px; align-items: flex-start;">
             <img src="${commenterAvatar}" alt="${commenterUsername}" class="avatar avatar-xs" style="margin-top: 2px;">
             <div style="flex: 1; font-size: 0.88rem;">
               <strong style="color: var(--text-primary); cursor: pointer;" onclick="window.CS_PROFILE.navigateToProfile('${commenterUsername}')">
                 ${commenterUsername}
               </strong>
-              <span style="margin-left: 6px; color: var(--text-primary);">${window.CS_UI.escapeHtml(c.text)}</span>
-              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Just now</div>
+              ${isPostAuthor ? `<span class="comment-badge-author">Author</span>` : ''}
+              ${c.replyToUsername ? `<span class="comment-replying-tag">↪ @${c.replyToUsername}</span>` : ''}
+              <span style="margin-left: 6px; color: var(--text-primary);">${window.CS_UI.formatTextWithTags(c.text)}</span>
+              <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Just now</span>
+                <button type="button" class="comment-reply-btn" onclick="window.CS_PROFILE.startReplyInDetail('${postId}', '${c._id}', '${commenterUsername}')">Reply</button>
+              </div>
             </div>
             <button class="comment-delete-btn" onclick="window.CS_PROFILE.deleteCommentInDetail('${postId}', '${c._id}')" title="Delete comment">✕</button>
           </div>
@@ -766,7 +872,7 @@ const profileController = {
         container.insertAdjacentHTML('beforeend', newCommentHTML);
       }
 
-      window.CS_UI.showToast('Comment posted! 💬', 'success');
+      window.CS_UI.showToast(res.message || 'Comment posted! 💬', 'success');
     } catch (err) {
       window.CS_UI.showToast(err.message, 'error');
     }

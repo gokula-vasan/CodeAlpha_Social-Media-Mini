@@ -291,7 +291,7 @@ exports.toggleLike = async (req, res) => {
 // @access  Private
 exports.addComment = async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, replyTo } = req.body;
 
     if (!text || text.trim() === '') {
       return res.status(400).json({
@@ -309,9 +309,55 @@ exports.addComment = async (req, res) => {
       });
     }
 
+    const isPostOwner = post.user.toString() === req.user._id.toString();
+    let targetComment = null;
+    let replyToUsername = '';
+
+    // If replyTo is provided, find target comment
+    if (replyTo) {
+      targetComment = post.comments.id(replyTo);
+      if (targetComment) {
+        const User = require('../models/User');
+        const targetUser = await User.findById(targetComment.user);
+        if (targetUser) {
+          replyToUsername = targetUser.username;
+        }
+      }
+    }
+
+    // If not found via replyTo ID, check if text starts with @mention of someone who commented
+    if (!targetComment) {
+      const mentionMatch = text.trim().match(/^@([a-zA-Z0-9_.]+)/);
+      if (mentionMatch) {
+        const mentionedUsername = mentionMatch[1].toLowerCase();
+        const User = require('../models/User');
+        const mentionedUser = await User.findOne({ username: mentionedUsername });
+        if (mentionedUser) {
+          targetComment = post.comments.find(
+            (c) => c.user.toString() === mentionedUser._id.toString()
+          );
+          if (targetComment) {
+            replyToUsername = mentionedUser.username;
+          }
+        }
+      }
+    }
+
+    // RULE: Account owner can ONLY reply to comments, not put top-level comment on own post.
+    if (isPostOwner) {
+      if (!targetComment && !replyTo) {
+        return res.status(400).json({
+          success: false,
+          message: 'As the post owner, you can only reply to comments from other users.',
+        });
+      }
+    }
+
     const newComment = {
       user: req.user._id,
       text: text.trim(),
+      replyTo: targetComment ? targetComment._id : (replyTo || null),
+      replyToUsername: replyToUsername || '',
       createdAt: new Date(),
     };
 
@@ -326,20 +372,28 @@ exports.addComment = async (req, res) => {
 
     const addedComment = updatedPost.comments[updatedPost.comments.length - 1];
 
-    // Notification if commenting on someone else's post
-    if (post.user.toString() !== req.user._id.toString()) {
+    // Notification handling
+    if (!isPostOwner) {
       await Notification.create({
         recipient: post.user,
         sender: req.user._id,
         type: 'comment',
         post: post._id,
-        text: `commented: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`,
+        text: `commented on your post: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`,
+      });
+    } else if (targetComment && targetComment.user.toString() !== req.user._id.toString()) {
+      await Notification.create({
+        recipient: targetComment.user,
+        sender: req.user._id,
+        type: 'comment',
+        post: post._id,
+        text: `replied to your comment: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`,
       });
     }
 
     res.status(201).json({
       success: true,
-      message: 'Comment added',
+      message: isPostOwner ? 'Reply posted' : 'Comment added',
       comment: addedComment,
       commentCount: updatedPost.comments.length,
     });

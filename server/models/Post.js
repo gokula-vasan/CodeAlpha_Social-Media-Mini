@@ -13,6 +13,15 @@ const commentSchema = new mongoose.Schema(
       trim: true,
       maxlength: [500, 'Comment cannot exceed 500 characters'],
     },
+    replyTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: null,
+    },
+    replyToUsername: {
+      type: String,
+      default: '',
+      trim: true,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

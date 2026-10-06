@@ -50,28 +50,10 @@ const postsController = {
     const comments = post.comments || [];
     const filterClass = post.filter ? `filter-${post.filter}` : 'filter-normal';
 
-    // Show recent 2 comments or none
+    // Render comments list
     const commentsPreviewHTML = comments
       .slice(-3)
-      .map(
-        (c) => `
-        <div class="comment-item" id="comment-${c._id}">
-          <div class="comment-content">
-            <span class="comment-author" onclick="window.CS_APP.openProfile('${c.user?.username || ''}')">
-              ${c.user?.username || 'user'}
-            </span>
-            <span>${c.text}</span>
-          </div>
-          ${
-            (window.CS_STATE.currentUser &&
-              (window.CS_STATE.currentUser._id === c.user?._id ||
-                window.CS_STATE.currentUser._id === (post.user?._id || post.user)))
-              ? `<button class="comment-delete-btn" onclick="window.CS_POSTS.deleteComment('${post._id}', '${c._id}')" title="Delete comment">✕</button>`
-              : ''
-          }
-        </div>
-      `
-      )
+      .map((c) => postsController.renderCommentItemHTML(c, post))
       .join('');
 
     return `
@@ -190,11 +172,40 @@ const postsController = {
           </div>
         </div>
 
-        <!-- Comment Input Bar -->
-        <form class="post-comment-input-bar" onsubmit="window.CS_POSTS.submitComment(event, '${post._id}')">
-          <input type="text" class="comment-input" id="input-comment-${post._id}" placeholder="Add a comment as ${window.CS_STATE.currentUser?.username || 'guest'}..." autocomplete="off">
-          <button type="submit" class="btn-post-comment">Post</button>
-        </form>
+        <!-- Comment Input / Reply Area -->
+        <div class="post-comment-section-footer" id="comment-footer-${post._id}">
+          <!-- Reply Banner -->
+          <div class="comment-reply-banner" id="reply-banner-${post._id}" style="display: none;">
+            <span>Replying to <strong id="reply-user-${post._id}">@user</strong></span>
+            <button type="button" class="btn-cancel-reply" onclick="window.CS_POSTS.cancelReply('${post._id}')" title="Cancel reply">✕</button>
+          </div>
+
+          ${
+            isOwner
+              ? `
+            <!-- Post Author: Can ONLY reply to comments from other users -->
+            <div class="post-owner-comment-container" id="owner-comment-container-${post._id}">
+              <div class="post-owner-hint-box" id="owner-hint-${post._id}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>${comments.length > 0 ? 'Post author: click <strong>Reply</strong> on any comment to respond' : 'No comments yet. Viewers can comment on your post!'}</span>
+              </div>
+              <form class="post-comment-input-bar" id="form-comment-${post._id}" onsubmit="window.CS_POSTS.submitComment(event, '${post._id}')" style="display: none;">
+                <input type="hidden" id="reply-to-id-${post._id}" value="">
+                <input type="text" class="comment-input" id="input-comment-${post._id}" placeholder="Reply to comment as author..." autocomplete="off">
+                <button type="submit" class="btn-post-comment">Reply</button>
+              </form>
+            </div>
+          `
+              : `
+            <!-- Other Users: Standard Comment Form -->
+            <form class="post-comment-input-bar" id="form-comment-${post._id}" onsubmit="window.CS_POSTS.submitComment(event, '${post._id}')">
+              <input type="hidden" id="reply-to-id-${post._id}" value="">
+              <input type="text" class="comment-input" id="input-comment-${post._id}" placeholder="Add a comment as @${window.CS_STATE.currentUser?.username || 'guest'}..." autocomplete="off">
+              <button type="submit" class="btn-post-comment">Post</button>
+            </form>
+          `
+          }
+        </div>
       </article>
     `;
   },
@@ -257,7 +268,103 @@ const postsController = {
     if (input) input.focus();
   },
 
-  // Submit comment
+  // Render single comment HTML
+  renderCommentItemHTML: (c, post) => {
+    const postOwnerId = (post.user?._id || post.user || '').toString();
+    const commentUserId = (c.user?._id || c.user || '').toString();
+    const isPostAuthor = commentUserId && postOwnerId && commentUserId === postOwnerId;
+    const commenterUsername = c.user?.username || 'user';
+    const currentUserId = window.CS_STATE.currentUser?._id;
+    const canDelete =
+      currentUserId &&
+      (currentUserId === commentUserId || currentUserId === postOwnerId);
+
+    return `
+      <div class="comment-item ${isPostAuthor ? 'author-comment' : ''}" id="comment-${c._id}">
+        <div class="comment-content">
+          <span class="comment-author" onclick="window.CS_APP.openProfile('${commenterUsername}')">
+            ${commenterUsername}
+          </span>
+          ${isPostAuthor ? `<span class="comment-badge-author">Author</span>` : ''}
+          ${c.replyToUsername ? `<span class="comment-replying-tag">↪ @${c.replyToUsername}</span>` : ''}
+          <span class="comment-text">${window.CS_UI.formatTextWithTags(c.text)}</span>
+        </div>
+        <div class="comment-actions">
+          <button type="button" class="comment-reply-btn" onclick="window.CS_POSTS.startReply('${post._id}', '${c._id}', '${commenterUsername}')">
+            Reply
+          </button>
+          ${
+            canDelete
+              ? `<button class="comment-delete-btn" onclick="window.CS_POSTS.deleteComment('${post._id}', '${c._id}')" title="Delete comment">✕</button>`
+              : ''
+          }
+        </div>
+      </div>
+    `;
+  },
+
+  // Start reply mode on a specific comment
+  startReply: (postId, commentId, username) => {
+    if (!window.CS_STATE.isLoggedIn()) {
+      window.CS_AUTH.openAuthModal('login');
+      window.CS_UI.showToast('Please log in to reply', 'info');
+      return;
+    }
+
+    const replyIdInput = document.getElementById(`reply-to-id-${postId}`);
+    const replyBanner = document.getElementById(`reply-banner-${postId}`);
+    const replyUserSpan = document.getElementById(`reply-user-${postId}`);
+    const form = document.getElementById(`form-comment-${postId}`);
+    const ownerHint = document.getElementById(`owner-hint-${postId}`);
+    const input = document.getElementById(`input-comment-${postId}`);
+
+    if (replyIdInput) replyIdInput.value = commentId;
+    if (replyUserSpan) replyUserSpan.innerText = `@${username}`;
+    if (replyBanner) replyBanner.style.display = 'flex';
+    if (form) form.style.display = 'flex';
+    if (ownerHint) ownerHint.style.display = 'none';
+
+    if (input) {
+      input.placeholder = `Reply to @${username}...`;
+      input.value = `@${username} `;
+      input.focus();
+    }
+  },
+
+  // Cancel reply mode
+  cancelReply: (postId) => {
+    const replyIdInput = document.getElementById(`reply-to-id-${postId}`);
+    const replyBanner = document.getElementById(`reply-banner-${postId}`);
+    const form = document.getElementById(`form-comment-${postId}`);
+    const ownerHint = document.getElementById(`owner-hint-${postId}`);
+    const input = document.getElementById(`input-comment-${postId}`);
+
+    if (replyIdInput) replyIdInput.value = '';
+    if (replyBanner) replyBanner.style.display = 'none';
+
+    if (ownerHint) {
+      ownerHint.style.display = 'flex';
+      if (form) form.style.display = 'none';
+    }
+
+    if (input) {
+      input.value = '';
+      input.placeholder = `Add a comment as @${window.CS_STATE.currentUser?.username || 'guest'}...`;
+    }
+  },
+
+  // Toggle all comments view
+  toggleAllComments: async (postId) => {
+    const post = window.CS_STATE.feedPosts.find((p) => p._id === postId);
+    const commentsList = document.getElementById(`comments-list-${postId}`);
+    if (!post || !commentsList) return;
+
+    commentsList.innerHTML = post.comments
+      .map((c) => postsController.renderCommentItemHTML(c, post))
+      .join('');
+  },
+
+  // Submit comment or reply
   submitComment: async (e, postId) => {
     e.preventDefault();
     if (!window.CS_STATE.isLoggedIn()) {
@@ -267,34 +374,31 @@ const postsController = {
     }
 
     const input = document.getElementById(`input-comment-${postId}`);
+    const replyIdInput = document.getElementById(`reply-to-id-${postId}`);
     if (!input || !input.value.trim()) return;
 
     const text = input.value.trim();
-    input.value = '';
+    const replyTo = replyIdInput && replyIdInput.value ? replyIdInput.value : null;
 
     try {
-      const res = await window.CS_API.posts.addComment(postId, text);
+      const res = await window.CS_API.posts.addComment(postId, text, replyTo);
+      input.value = '';
+      postsController.cancelReply(postId);
+
       const commentsList = document.getElementById(`comments-list-${postId}`);
       const commentCountEl = document.getElementById(`comment-count-${postId}`);
 
       if (commentCountEl) commentCountEl.innerText = res.commentCount;
 
       if (commentsList) {
-        const commentHTML = `
-          <div class="comment-item fade-in" id="comment-${res.comment._id}">
-            <div class="comment-content">
-              <span class="comment-author" onclick="window.CS_APP.openProfile('${res.comment.user?.username || ''}')">
-                ${res.comment.user?.username || 'you'}
-              </span>
-              <span>${res.comment.text}</span>
-            </div>
-            <button class="comment-delete-btn" onclick="window.CS_POSTS.deleteComment('${postId}', '${res.comment._id}')" title="Delete comment">✕</button>
-          </div>
-        `;
+        // Find post object
+        const post = window.CS_STATE.feedPosts.find((p) => p._id === postId) || { _id: postId };
+        if (post.comments) post.comments.push(res.comment);
+        const commentHTML = postsController.renderCommentItemHTML(res.comment, post);
         commentsList.insertAdjacentHTML('beforeend', commentHTML);
       }
 
-      window.CS_UI.showToast('Comment added!', 'success');
+      window.CS_UI.showToast(res.message || 'Comment added!', 'success');
     } catch (err) {
       window.CS_UI.showToast(err.message, 'error');
     }
