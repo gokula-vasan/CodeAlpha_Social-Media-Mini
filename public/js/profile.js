@@ -7,8 +7,9 @@ const profileController = {
   // Load and display profile page
   loadProfile: async (username) => {
     try {
-      const res = await window.CS_API.users.getProfile(username);
-      profileController.currentProfileUsername = username;
+      const cleanUsername = (username || '').replace(/^@/, '').trim();
+      const res = await window.CS_API.users.getProfile(cleanUsername);
+      profileController.currentProfileUsername = cleanUsername;
       window.CS_STATE.currentProfileUser = res.user;
       profileController.profilePosts = res.posts || [];
 
@@ -227,16 +228,23 @@ const profileController = {
   },
 
   // View post in feed
-  viewPostInFeed: (postId) => {
+  viewPostInFeed: async (postId) => {
     profileController.showFeedView();
+    window.CS_APP.switchFeedTab('foryou');
+
+    let postEl = document.getElementById(`post-${postId}`);
+    if (!postEl) {
+      await window.CS_APP.loadFeed();
+      postEl = document.getElementById(`post-${postId}`);
+    }
+
     setTimeout(() => {
-      const postEl = document.getElementById(`post-${postId}`);
       if (postEl) {
         postEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         postEl.style.boxShadow = '0 0 0 3px var(--primary)';
         setTimeout(() => (postEl.style.boxShadow = ''), 2000);
       }
-    }, 100);
+    }, 150);
   },
 
   // Open Edit Profile Modal

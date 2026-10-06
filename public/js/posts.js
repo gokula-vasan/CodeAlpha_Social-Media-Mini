@@ -6,16 +6,28 @@ const postsController = {
     if (!container) return;
 
     if (!posts || posts.length === 0) {
+      const isFollowingTab = window.CS_STATE.feedType === 'following';
       container.innerHTML = `
         <div style="text-align: center; padding: 60px 20px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
-          <div style="font-size: 3rem; margin-bottom: 12px;">🌟</div>
-          <h3 style="margin-bottom: 8px;">No posts yet in this feed</h3>
-          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">
-            Be the first to share an inspiring update, project, or photo!
+          <div style="font-size: 3rem; margin-bottom: 12px;">${isFollowingTab ? '👥' : '🌟'}</div>
+          <h3 style="margin-bottom: 8px;">${isFollowingTab ? 'No posts from creators you follow' : 'No posts yet in this feed'}</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px; max-width: 420px; margin-left: auto; margin-right: auto;">
+            ${isFollowingTab ? 'Explore community posts on the For You feed, or find and follow other creators!' : 'Be the first to share an inspiring update, project, or photo!'}
           </p>
-          <button class="btn btn-primary" onclick="window.CS_POSTS.openCreateModal()">
-            Create First Post
-          </button>
+          <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            ${isFollowingTab ? `
+              <button class="btn btn-primary" onclick="window.CS_APP.switchFeedTab('foryou')">
+                Explore "For You" Feed
+              </button>
+              <button class="btn btn-secondary" onclick="window.CS_APP.openSearchModal()">
+                Discover Creators
+              </button>
+            ` : `
+              <button class="btn btn-primary" onclick="window.CS_POSTS.openCreateModal()">
+                Create First Post
+              </button>
+            `}
+          </div>
         </div>
       `;
       return;

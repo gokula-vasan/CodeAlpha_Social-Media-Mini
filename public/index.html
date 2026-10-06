@@ -534,6 +534,39 @@
     </div>
   </div>
 
+  <!-- 7. SWITCH ACCOUNT MODAL -->
+  <div class="modal-overlay" id="switchAccountModal">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <polyline points="17 11 19 13 23 9"></polyline>
+          </svg>
+          <h3 class="modal-title">Switch Accounts</h3>
+        </div>
+        <button class="modal-close-btn" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 16px 20px;">
+        <div id="switchAccountsList" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+          <!-- Dynamically populated accounts -->
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <button class="btn btn-secondary" style="width: 100%;" onclick="window.CS_AUTH.openAuthModal('login')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+            Log in to another account
+          </button>
+          <button class="btn btn-secondary" style="width: 100%;" onclick="window.CS_AUTH.openAuthModal('register')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Create new account
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div class="toast-container" id="toastContainer"></div>
 

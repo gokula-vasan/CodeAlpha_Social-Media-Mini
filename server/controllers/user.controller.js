@@ -7,7 +7,8 @@ const Notification = require('../models/Notification');
 // @access  Public / Optional Auth
 exports.getUserProfile = async (req, res) => {
   try {
-    const username = req.params.username.toLowerCase();
+    const rawUsername = req.params.username || '';
+    const username = rawUsername.replace(/^@/, '').trim().toLowerCase();
     const user = await User.findOne({ username })
       .select('-password')
       .populate('followers', 'name username avatar')
@@ -247,6 +248,36 @@ exports.getSavedPosts = async (req, res) => {
     });
   } catch (error) {
     console.error('Get saved posts error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error',
+    });
+  }
+};
+
+// @desc    Get all accounts (for quick account switcher & discovery)
+// @route   GET /api/users/accounts
+// @access  Public
+exports.getAllAccounts = async (req, res) => {
+  try {
+    const users = await User.find({})
+      .select('name username avatar bio followers following')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      accounts: users.map((u) => ({
+        _id: u._id,
+        name: u.name,
+        username: u.username,
+        avatar: u.avatar,
+        bio: u.bio,
+        followersCount: (u.followers || []).length,
+        followingCount: (u.following || []).length,
+      })),
+    });
+  } catch (error) {
+    console.error('Get all accounts error:', error);
     res.status(500).json({
       success: false,
       message: error.message || 'Server error',

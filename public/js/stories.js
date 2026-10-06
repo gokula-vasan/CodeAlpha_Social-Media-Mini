@@ -99,9 +99,22 @@ const storiesController = {
     const captionEl = document.getElementById('storyViewerCaption');
     const progressContainer = document.getElementById('storyProgressContainer');
 
-    if (mediaImg) mediaImg.src = story.mediaUrl;
-    if (authorAvatar) authorAvatar.src = user.avatar || window.CS_UI.getDefaultAvatar(user.name);
-    if (authorName) authorName.innerText = user.username;
+    if (authorAvatar) {
+      authorAvatar.src = user.avatar || window.CS_UI.getDefaultAvatar(user.name);
+      authorAvatar.style.cursor = 'pointer';
+      authorAvatar.onclick = () => {
+        storiesController.closeViewer();
+        window.CS_APP.openProfile(user.username);
+      };
+    }
+    if (authorName) {
+      authorName.innerText = user.username;
+      authorName.style.cursor = 'pointer';
+      authorName.onclick = () => {
+        storiesController.closeViewer();
+        window.CS_APP.openProfile(user.username);
+      };
+    }
     if (captionEl) {
       if (story.caption) {
         captionEl.innerText = story.caption;

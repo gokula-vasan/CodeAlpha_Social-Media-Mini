@@ -3,8 +3,17 @@ const authController = {
   currentTab: 'login',
 
   // Open auth modal
-  openAuthModal: (tab = 'login') => {
+  openAuthModal: (tab = 'login', prefillUsername = '') => {
     authController.switchAuthTab(tab);
+    if (prefillUsername) {
+      const input = document.getElementById('loginIdentifierInput');
+      if (input) input.value = prefillUsername;
+      const pwInput = document.getElementById('loginPasswordInput');
+      if (pwInput) {
+        pwInput.value = '';
+        setTimeout(() => pwInput.focus(), 150);
+      }
+    }
     window.CS_UI.openModal('authModal');
   },
 
@@ -29,6 +38,161 @@ const authController = {
     }
   },
 
+  // Multi-Account Management
+  getSavedAccounts: () => {
+    try {
+      return JSON.parse(localStorage.getItem('cs_saved_accounts') || '[]');
+    } catch (_) {
+      return [];
+    }
+  },
+
+  saveAccount: (token, user) => {
+    if (!token || !user) return;
+    const accounts = authController.getSavedAccounts();
+    const idx = accounts.findIndex((a) => a.user._id === user._id);
+    const item = { token, user };
+    if (idx >= 0) {
+      accounts[idx] = item;
+    } else {
+      accounts.push(item);
+    }
+    localStorage.setItem('cs_saved_accounts', JSON.stringify(accounts));
+  },
+
+  removeSavedAccount: (userId) => {
+    const accounts = authController.getSavedAccounts().filter((a) => a.user._id !== userId);
+    localStorage.setItem('cs_saved_accounts', JSON.stringify(accounts));
+    authController.renderSwitchAccountsList();
+  },
+
+  // Switch active account (1-click or login prompt)
+  switchToAccount: async (userId, username) => {
+    const saved = authController.getSavedAccounts().find((a) => a.user._id === userId);
+    if (saved && saved.token) {
+      // Direct instant switch
+      localStorage.setItem('cs_token', saved.token);
+      window.CS_STATE.setCurrentUser(saved.user);
+      authController.updateAuthUI(saved.user);
+      window.CS_UI.closeModal('switchAccountModal');
+
+      const dropdown = document.getElementById('userMenuDropdown');
+      if (dropdown) dropdown.classList.remove('show');
+
+      // Refresh all state cleanly
+      window.CS_PROFILE.showFeedView();
+      window.CS_APP.switchFeedTab('foryou');
+      window.CS_APP.loadStories();
+      window.CS_APP.loadFeed();
+      window.CS_APP.loadSuggestions();
+      window.CS_APP.checkNotifications();
+
+      window.CS_UI.showToast(`Switched to ${saved.user.name} (@${saved.user.username})! ✨`, 'success');
+    } else {
+      // Needs password
+      window.CS_UI.closeModal('switchAccountModal');
+      authController.openAuthModal('login', username);
+      window.CS_UI.showToast(`Please enter password for @${username}`, 'info');
+    }
+  },
+
+  // Open switch accounts modal
+  openSwitchModal: async () => {
+    const dropdown = document.getElementById('userMenuDropdown');
+    if (dropdown) dropdown.classList.remove('show');
+
+    window.CS_UI.openModal('switchAccountModal');
+    await authController.renderSwitchAccountsList();
+  },
+
+  // Render accounts list in switchAccountModal
+  renderSwitchAccountsList: async () => {
+    const container = document.getElementById('switchAccountsList');
+    if (!container) return;
+
+    container.innerHTML = `<p style="padding: 12px; color: var(--text-muted); font-size: 0.88rem; text-align: center;">Loading accounts...</p>`;
+
+    try {
+      const savedList = authController.getSavedAccounts();
+      const currentUserId = window.CS_STATE.currentUser?._id;
+
+      // Fetch all registered accounts from backend for complete discovery
+      let allRegistered = [];
+      try {
+        const res = await window.CS_API.users.getAll();
+        allRegistered = res.accounts || [];
+      } catch (_) {}
+
+      // Combine accounts
+      const accountsMap = new Map();
+
+      // First add all saved accounts
+      savedList.forEach((s) => {
+        accountsMap.set(s.user._id, {
+          _id: s.user._id,
+          name: s.user.name,
+          username: s.user.username,
+          avatar: s.user.avatar,
+          hasSavedToken: true,
+        });
+      });
+
+      // Then add any other registered accounts
+      allRegistered.forEach((u) => {
+        if (!accountsMap.has(u._id)) {
+          accountsMap.set(u._id, {
+            _id: u._id,
+            name: u.name,
+            username: u.username,
+            avatar: u.avatar,
+            hasSavedToken: false,
+          });
+        }
+      });
+
+      const accounts = Array.from(accountsMap.values());
+
+      if (accounts.length === 0) {
+        container.innerHTML = `
+          <p style="padding: 16px; color: var(--text-muted); font-size: 0.9rem; text-align: center;">
+            No other accounts found. Log in below!
+          </p>
+        `;
+        return;
+      }
+
+      container.innerHTML = accounts
+        .map((acc) => {
+          const isActive = currentUserId && acc._id === currentUserId;
+          const avatarSrc = acc.avatar || window.CS_UI.getDefaultAvatar(acc.name);
+
+          return `
+            <div class="switch-account-item ${isActive ? 'active' : ''}">
+              <img src="${avatarSrc}" alt="${acc.name}" class="avatar avatar-md">
+              <div class="switch-account-info" onclick="window.CS_AUTH.switchToAccount('${acc._id}', '${acc.username}')" style="cursor: pointer;">
+                <span class="switch-account-name">${acc.name}</span>
+                <span class="switch-account-username">@${acc.username}</span>
+              </div>
+              <div>
+                ${
+                  isActive
+                    ? `<span class="switch-account-badge">✓ Active</span>`
+                    : `
+                    <button class="btn btn-primary btn-sm" onclick="window.CS_AUTH.switchToAccount('${acc._id}', '${acc.username}')">
+                      ${acc.hasSavedToken ? 'Switch' : 'Log In'}
+                    </button>
+                  `
+                }
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+    } catch (err) {
+      container.innerHTML = `<p style="color: var(--danger); font-size: 0.85rem; padding: 12px;">Failed to load accounts</p>`;
+    }
+  },
+
   // Initialize Auth state from localStorage
   initAuthSession: async () => {
     const token = localStorage.getItem('cs_token');
@@ -40,6 +204,7 @@ const authController = {
     try {
       const res = await window.CS_API.auth.getMe();
       window.CS_STATE.setCurrentUser(res.user);
+      authController.saveAccount(token, res.user);
       authController.updateAuthUI(res.user);
     } catch (err) {
       console.warn('Session expired or invalid:', err.message);
@@ -117,19 +282,28 @@ const authController = {
     try {
       const res = await window.CS_API.auth.login(identifier, password);
       localStorage.setItem('cs_token', res.token);
+      authController.saveAccount(res.token, res.user);
       window.CS_STATE.setCurrentUser(res.user);
       authController.updateAuthUI(res.user);
       window.CS_UI.closeModal('authModal');
+      window.CS_UI.closeModal('switchAccountModal');
+
+      const dropdown = document.getElementById('userMenuDropdown');
+      if (dropdown) dropdown.classList.remove('show');
+
       window.CS_UI.showToast(`Welcome back, ${res.user.name}! 👋`, 'success');
 
-      // Refresh feed
+      // Refresh feed view & load data
+      window.CS_PROFILE.showFeedView();
+      window.CS_APP.switchFeedTab('foryou');
+      window.CS_APP.loadStories();
       window.CS_APP.loadFeed();
       window.CS_APP.loadSuggestions();
+      window.CS_APP.checkNotifications();
     } catch (err) {
       window.CS_UI.showToast(err.message, 'error');
     }
   },
-
 
   // Perform Logout
   logout: (showNotification = true) => {
@@ -147,13 +321,10 @@ const authController = {
 
     // Refresh feed in public view
     window.CS_PROFILE.showFeedView();
+    window.CS_APP.switchFeedTab('foryou');
+    window.CS_APP.loadStories();
     window.CS_APP.loadFeed();
     window.CS_APP.loadSuggestions();
-  },
-
-  // Open quick switch demo accounts modal
-  openSwitchModal: () => {
-    authController.openAuthModal('login');
   },
 
   // Setup form event listeners
@@ -220,13 +391,23 @@ const authController = {
           });
 
           localStorage.setItem('cs_token', res.token);
+          authController.saveAccount(res.token, res.user);
           window.CS_STATE.setCurrentUser(res.user);
           authController.updateAuthUI(res.user);
           window.CS_UI.closeModal('authModal');
+          window.CS_UI.closeModal('switchAccountModal');
+
+          const dropdown = document.getElementById('userMenuDropdown');
+          if (dropdown) dropdown.classList.remove('show');
+
           window.CS_UI.showToast(`Welcome to ConnectSphere, ${res.user.name}! 🚀`, 'success');
 
+          window.CS_PROFILE.showFeedView();
+          window.CS_APP.switchFeedTab('foryou');
+          window.CS_APP.loadStories();
           window.CS_APP.loadFeed();
           window.CS_APP.loadSuggestions();
+          window.CS_APP.checkNotifications();
         } catch (err) {
           window.CS_UI.showToast(err.message, 'error');
         } finally {

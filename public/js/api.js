@@ -164,6 +164,12 @@ const api = {
       });
       return handleResponse(res);
     },
+    getAll: async () => {
+      const res = await fetch(`${API_BASE}/users/accounts`, {
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
   },
 
   // Stories
