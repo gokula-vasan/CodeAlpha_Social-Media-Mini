@@ -67,27 +67,6 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Dev helper: clear database if requested
-if (process.env.NODE_ENV === 'development') {
-  app.post('/api/dev/clean-db', async (req, res) => {
-    try {
-      const User = require('./models/User');
-      const Post = require('./models/Post');
-      const Story = require('./models/Story');
-      const Notification = require('./models/Notification');
-      await Promise.all([
-        User.deleteMany({}),
-        Post.deleteMany({}),
-        Story.deleteMany({}),
-        Notification.deleteMany({}),
-      ]);
-      res.json({ success: true, message: 'Database wiped clean successfully' });
-    } catch (err) {
-      res.status(500).json({ success: false, message: err.message });
-    }
-  });
-}
-
 let serverInstance = null;
 let storyCleanupInterval = null;
 
