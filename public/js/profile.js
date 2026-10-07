@@ -94,9 +94,19 @@ const profileController = {
     headerContainer.innerHTML = `
       <div class="profile-main-info">
         <div class="profile-avatar-wrapper ${hasActiveStory ? 'has-active-story' : ''}" 
-             ${hasActiveStory ? `onclick="window.CS_STORIES.openViewerForUser('${user.username}')" style="cursor: pointer;" title="${isSelf ? 'View your story (click to view or delete)' : `View ${user.username}\'s story`}"` : ''}>
+             ${hasActiveStory ? `onclick="window.CS_STORIES.openViewerForUser('${user.username}')" style="cursor: pointer;" title="${isSelf ? 'View your story (click to view or delete)' : `View ${user.username}\'s story`}"` : (isSelf ? `onclick="document.getElementById('quickProfileAvatarInput').click()" style="cursor: pointer;" title="Click to upload profile photo"` : '')}>
           <img src="${user.avatar || window.CS_UI.getDefaultAvatar(user.name)}" alt="${user.name}" class="profile-avatar-large ${hasActiveStory ? 'has-story-ring' : ''}">
           ${hasActiveStory ? `<span class="profile-story-badge" title="Active story">Story</span>` : ''}
+          ${
+            isSelf
+              ? `
+            <button type="button" class="profile-avatar-camera-btn" onclick="event.stopPropagation(); document.getElementById('quickProfileAvatarInput').click()" title="Change profile photo" aria-label="Change profile photo">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            </button>
+            <input type="file" id="quickProfileAvatarInput" accept="image/*" style="display: none;" onchange="window.CS_PROFILE.uploadQuickAvatar(this.files[0])">
+          `
+              : ''
+          }
         </div>
         <div class="profile-user-meta">
           <div class="profile-top-row">
@@ -1014,6 +1024,34 @@ const profileController = {
     }, 150);
   },
 
+  editProfileRemoveAvatar: false,
+
+  // Quick avatar upload directly from clicking profile photo / camera icon
+  uploadQuickAvatar: async (file) => {
+    if (!file) return;
+    try {
+      window.CS_UI.showToast('Uploading profile photo...', 'info');
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const res = await window.CS_API.auth.updateProfile(formData);
+      window.CS_STATE.setCurrentUser(res.user);
+      if (window.CS_AUTH && window.CS_AUTH.updateAuthUI) {
+        window.CS_AUTH.updateAuthUI(res.user);
+      }
+
+      window.CS_UI.showToast('Profile photo updated successfully! 📸', 'success');
+
+      // Re-render profile view and stories bar
+      profileController.renderProfileHeader(res.user);
+      if (window.CS_STORIES && window.CS_STATE.storiesGrouped) {
+        window.CS_STORIES.renderStoriesBar(window.CS_STATE.storiesGrouped);
+      }
+    } catch (err) {
+      window.CS_UI.showToast(err.message || 'Failed to upload photo', 'error');
+    }
+  },
+
   // Open Edit Profile Modal
   openEditModal: () => {
     const user = window.CS_STATE.currentUser;
@@ -1025,23 +1063,78 @@ const profileController = {
     document.getElementById('editWebsiteInput').value = user.website || '';
     document.getElementById('editLocationInput').value = user.location || '';
 
+    // Initialize photo preview
+    const previewImg = document.getElementById('editAvatarPreviewImg');
+    if (previewImg) {
+      previewImg.src = user.avatar || window.CS_UI.getDefaultAvatar(user.name);
+    }
+    const fileInput = document.getElementById('editAvatarFileInput');
+    if (fileInput) fileInput.value = '';
+
+    profileController.editProfileRemoveAvatar = false;
+
     window.CS_UI.openModal('editProfileModal');
   },
 
   // Setup Edit Profile Form
   setupEditProfileHandler: () => {
     const form = document.getElementById('editProfileForm');
+    const fileInput = document.getElementById('editAvatarFileInput');
+    const urlInput = document.getElementById('editAvatarInput');
+    const previewImg = document.getElementById('editAvatarPreviewImg');
+    const removeBtn = document.getElementById('btnRemoveAvatar');
     if (!form) return;
+
+    // File input change: live preview
+    if (fileInput && previewImg) {
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          profileController.editProfileRemoveAvatar = false;
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            previewImg.src = evt.target.result;
+          };
+          reader.readAsDataURL(e.target.files[0]);
+          if (urlInput) urlInput.value = '';
+        }
+      });
+    }
+
+    // URL input typing: live preview
+    if (urlInput && previewImg) {
+      urlInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        if (val && (val.startsWith('http://') || val.startsWith('https://'))) {
+          profileController.editProfileRemoveAvatar = false;
+          previewImg.src = val;
+        } else if (!val && (!fileInput || !fileInput.files[0])) {
+          const user = window.CS_STATE.currentUser;
+          previewImg.src = user ? (user.avatar || window.CS_UI.getDefaultAvatar(user.name)) : '';
+        }
+      });
+    }
+
+    // Remove photo button
+    if (removeBtn && previewImg) {
+      removeBtn.addEventListener('click', () => {
+        profileController.editProfileRemoveAvatar = true;
+        if (fileInput) fileInput.value = '';
+        if (urlInput) urlInput.value = '';
+        const user = window.CS_STATE.currentUser;
+        previewImg.src = window.CS_UI.getDefaultAvatar(user?.name || 'User');
+      });
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const submitBtn = form.querySelector('button[type="submit"]');
 
       const name = document.getElementById('editNameInput').value.trim();
-      const avatar = document.getElementById('editAvatarInput').value.trim();
+      const avatarUrl = urlInput ? urlInput.value.trim() : '';
       const bio = document.getElementById('editBioInput').value.trim();
       const website = document.getElementById('editWebsiteInput').value.trim();
       const location = document.getElementById('editLocationInput').value.trim();
+      const file = fileInput && fileInput.files && fileInput.files[0];
 
       try {
         if (submitBtn) {
@@ -1049,20 +1142,41 @@ const profileController = {
           submitBtn.innerText = 'Saving...';
         }
 
-        const res = await window.CS_API.auth.updateProfile({
-          name,
-          avatar,
-          bio,
-          website,
-          location,
-        });
+        let res;
+        if (file) {
+          // File upload via multipart/form-data
+          const formData = new FormData();
+          formData.append('avatar', file);
+          formData.append('name', name);
+          formData.append('bio', bio);
+          formData.append('website', website);
+          formData.append('location', location);
+          res = await window.CS_API.auth.updateProfile(formData);
+        } else {
+          // URL or Remove Avatar via JSON
+          res = await window.CS_API.auth.updateProfile({
+            name,
+            bio,
+            website,
+            location,
+            avatar: profileController.editProfileRemoveAvatar ? '' : avatarUrl,
+            removeAvatar: profileController.editProfileRemoveAvatar,
+          });
+        }
 
         window.CS_STATE.setCurrentUser(res.user);
+        if (window.CS_AUTH && window.CS_AUTH.updateAuthUI) {
+          window.CS_AUTH.updateAuthUI(res.user);
+        }
+
         window.CS_UI.closeModal('editProfileModal');
         window.CS_UI.showToast('Profile updated successfully! ✨', 'success');
 
         // Re-render profile
         profileController.loadProfile(res.user.username);
+        if (window.CS_STORIES && window.CS_STATE.storiesGrouped) {
+          window.CS_STORIES.renderStoriesBar(window.CS_STATE.storiesGrouped);
+        }
       } catch (err) {
         window.CS_UI.showToast(err.message, 'error');
       } finally {

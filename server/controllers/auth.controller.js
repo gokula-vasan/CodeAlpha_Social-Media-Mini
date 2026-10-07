@@ -190,7 +190,7 @@ exports.getMe = async (req, res) => {
 // @access  Private
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, bio, website, location, avatar } = req.body;
+    const { name, bio, website, location, avatar, removeAvatar } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) {
@@ -204,7 +204,14 @@ exports.updateProfile = async (req, res) => {
     if (bio !== undefined) user.bio = bio;
     if (website !== undefined) user.website = website.trim();
     if (location !== undefined) user.location = location.trim();
-    if (avatar) user.avatar = avatar;
+
+    if (req.file) {
+      user.avatar = `/uploads/${req.file.filename}`;
+    } else if (removeAvatar === 'true' || removeAvatar === true) {
+      user.avatar = '';
+    } else if (avatar !== undefined) {
+      user.avatar = avatar.trim();
+    }
 
     await user.save();
 
@@ -222,6 +229,8 @@ exports.updateProfile = async (req, res) => {
         location: user.location,
         followersCount: user.followers.length,
         followingCount: user.following.length,
+        following: user.following,
+        followers: user.followers,
         savedPosts: user.savedPosts,
       },
     });

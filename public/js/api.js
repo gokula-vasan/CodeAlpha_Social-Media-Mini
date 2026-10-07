@@ -48,10 +48,11 @@ const api = {
       return handleResponse(res);
     },
     updateProfile: async (profileData) => {
+      const isFormData = profileData instanceof FormData;
       const res = await fetch(`${API_BASE}/auth/update-profile`, {
         method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(profileData),
+        headers: getHeaders(isFormData),
+        body: isFormData ? profileData : JSON.stringify(profileData),
       });
       return handleResponse(res);
     },
