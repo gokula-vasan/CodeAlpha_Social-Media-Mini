@@ -93,21 +93,28 @@ const profileController = {
 
     headerContainer.innerHTML = `
       <div class="profile-main-info">
-        <div class="profile-avatar-wrapper ${hasActiveStory ? 'has-active-story' : ''}" 
-             ${hasActiveStory ? `onclick="window.CS_STORIES.openViewerForUser('${user.username}')" style="cursor: pointer;" title="${isSelf ? 'View your story (click to view or delete)' : `View ${user.username}\'s story`}"` : (isSelf ? `onclick="document.getElementById('quickProfileAvatarInput').click()" style="cursor: pointer;" title="Click to upload profile photo"` : '')}>
-          <img src="${user.avatar || window.CS_UI.getDefaultAvatar(user.name)}" alt="${user.name}" class="profile-avatar-large ${hasActiveStory ? 'has-story-ring' : ''}">
-          ${hasActiveStory ? `<span class="profile-story-badge" title="Active story">Story</span>` : ''}
+        <div class="profile-avatar-wrapper ${hasActiveStory ? 'has-active-story' : ''}">
+          <img src="${user.avatar || window.CS_UI.getDefaultAvatar(user.name)}" 
+               alt="${user.name}" 
+               class="profile-avatar-large ${hasActiveStory ? 'has-story-ring' : ''}" 
+               id="profileLargeAvatarImg"
+               ${
+                 hasActiveStory
+                   ? `onclick="window.CS_STORIES.openViewerForUser('${user.username}')" style="cursor: pointer;" title="${isSelf ? 'View your story' : `View ${user.username}\'s story`}"`
+                   : (isSelf ? `onclick="window.CS_PROFILE.triggerAvatarUpload(event)" style="cursor: pointer;" title="Click to upload profile photo"` : '')
+               }>
+          ${hasActiveStory ? `<span class="profile-story-badge" onclick="window.CS_STORIES.openViewerForUser('${user.username}')" title="Active story">Story</span>` : ''}
           ${
             isSelf
               ? `
-            <button type="button" class="profile-avatar-camera-btn" onclick="event.stopPropagation(); document.getElementById('quickProfileAvatarInput').click()" title="Change profile photo" aria-label="Change profile photo">
+            <button type="button" class="profile-avatar-camera-btn" onclick="window.CS_PROFILE.triggerAvatarUpload(event)" title="Change profile photo" aria-label="Change profile photo">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
             </button>
-            <input type="file" id="quickProfileAvatarInput" accept="image/*" style="display: none;" onchange="window.CS_PROFILE.uploadQuickAvatar(this.files[0])">
           `
               : ''
           }
         </div>
+        ${isSelf ? `<input type="file" id="quickProfileAvatarInput" accept="image/*" style="display: none;" onchange="window.CS_PROFILE.uploadQuickAvatar(this.files[0])">` : ''}
         <div class="profile-user-meta">
           <div class="profile-top-row">
             <h2 class="profile-username-title">@${user.username}</h2>
@@ -1025,6 +1032,20 @@ const profileController = {
   },
 
   editProfileRemoveAvatar: false,
+
+  // Trigger file picker for avatar upload without triggering story viewer
+  triggerAvatarUpload: (e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    }
+    const input = document.getElementById('quickProfileAvatarInput');
+    if (input) {
+      input.value = '';
+      input.click();
+    }
+  },
 
   // Quick avatar upload directly from clicking profile photo / camera icon
   uploadQuickAvatar: async (file) => {
