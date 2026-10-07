@@ -355,11 +355,11 @@ const postsController = {
 
   // Toggle all comments view
   toggleAllComments: async (postId) => {
-    const post = window.CS_STATE.feedPosts.find((p) => p._id === postId);
+    const post = (window.CS_STATE.posts || []).find((p) => p._id === postId);
     const commentsList = document.getElementById(`comments-list-${postId}`);
     if (!post || !commentsList) return;
 
-    commentsList.innerHTML = post.comments
+    commentsList.innerHTML = (post.comments || [])
       .map((c) => postsController.renderCommentItemHTML(c, post))
       .join('');
   },
@@ -392,7 +392,7 @@ const postsController = {
 
       if (commentsList) {
         // Find post object
-        const post = window.CS_STATE.feedPosts.find((p) => p._id === postId) || { _id: postId };
+        const post = (window.CS_STATE.posts || []).find((p) => p._id === postId) || { _id: postId, comments: [] };
         if (post.comments) post.comments.push(res.comment);
         const commentHTML = postsController.renderCommentItemHTML(res.comment, post);
         commentsList.insertAdjacentHTML('beforeend', commentHTML);

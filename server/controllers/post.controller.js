@@ -317,7 +317,6 @@ exports.addComment = async (req, res) => {
     if (replyTo) {
       targetComment = post.comments.id(replyTo);
       if (targetComment) {
-        const User = require('../models/User');
         const targetUser = await User.findById(targetComment.user);
         if (targetUser) {
           replyToUsername = targetUser.username;
@@ -330,7 +329,6 @@ exports.addComment = async (req, res) => {
       const mentionMatch = text.trim().match(/^@([a-zA-Z0-9_.]+)/);
       if (mentionMatch) {
         const mentionedUsername = mentionMatch[1].toLowerCase();
-        const User = require('../models/User');
         const mentionedUser = await User.findOne({ username: mentionedUsername });
         if (mentionedUser) {
           targetComment = post.comments.find(

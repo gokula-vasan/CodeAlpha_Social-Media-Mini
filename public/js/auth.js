@@ -158,13 +158,6 @@ const authController = {
         if (res && res.accounts) allRegistered = res.accounts;
       } catch (_) {}
 
-      if (allRegistered.length === 0) {
-        try {
-          const sRes = await window.CS_API.users.search('a');
-          if (sRes && sRes.users) allRegistered = sRes.users;
-        } catch (_) {}
-      }
-
       // Combine accounts
       const accountsMap = new Map();
 

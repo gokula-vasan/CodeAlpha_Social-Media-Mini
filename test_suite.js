@@ -161,7 +161,14 @@ async function runTests() {
       await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/connectsphere');
       const db = mongoose.connection.db;
       const allUsers = await db.collection('users').find({}).toArray();
-      const testList = allUsers.filter(u => u.username.startsWith('user_a_') || u.username.startsWith('user_b_') || u.username.startsWith('tester_'));
+      const testList = allUsers.filter(u => 
+        u.username.startsWith('user_a_') || 
+        u.username.startsWith('user_b_') || 
+        u.username.startsWith('tester_') ||
+        u.username.startsWith('owner_') ||
+        u.username.startsWith('other_') ||
+        u.username.startsWith('vasantest_')
+      );
       for (const t of testList) {
         await db.collection('posts').deleteMany({ user: t._id });
         await db.collection('stories').deleteMany({ user: t._id });

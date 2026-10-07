@@ -780,24 +780,6 @@
   color: var(--text-muted);
 }
 
-/* Platform Footer */
-.platform-footer {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  line-height: 1.6;
-}
-
-.footer-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.footer-links a:hover {
-  text-decoration: underline;
-}
-
 /* ==========================================================================
    MODALS ARCHITECTURE
    ========================================================================== */

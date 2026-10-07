@@ -41,6 +41,17 @@ const ui = {
     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
   },
 
+  // HTML escaping utility for sanitizing user text safely
+  escapeHtml: (str = '') => {
+    if (typeof str !== 'string') return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  },
+
   // Relative timestamp formatter
   formatTimeAgo: (dateString) => {
     if (!dateString) return '';
