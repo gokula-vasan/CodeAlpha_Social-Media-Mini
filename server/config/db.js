@@ -37,6 +37,14 @@ const connectDB = async () => {
         fs.mkdirSync(dbPath, { recursive: true });
       }
 
+      // If port 27017 is free but a stale lock file remains from an interrupted shutdown, clean it
+      const lockFile = path.join(dbPath, 'mongod.lock');
+      if (fs.existsSync(lockFile)) {
+        try {
+          fs.unlinkSync(lockFile);
+        } catch (_) {}
+      }
+
       try {
         const { MongoMemoryServer } = require('mongodb-memory-server');
         mongoServerInstance = await MongoMemoryServer.create({
