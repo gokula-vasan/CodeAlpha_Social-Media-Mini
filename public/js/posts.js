@@ -450,9 +450,17 @@ const postsController = {
   // Copy post link
   copyLink: (postId) => {
     const url = `${window.location.origin}/#post-${postId}`;
-    navigator.clipboard.writeText(url).then(() => {
-      window.CS_UI.showToast('Link copied to clipboard! 📋', 'success');
-    });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url)
+        .then(() => {
+          window.CS_UI.showToast('Link copied to clipboard! 📋', 'success');
+        })
+        .catch(() => {
+          window.CS_UI.showToast(`Post URL: ${url}`, 'info');
+        });
+    } else {
+      window.CS_UI.showToast(`Post URL: ${url}`, 'info');
+    }
     // Hide menu if open
     const menu = document.getElementById(`menu-${postId}`);
     if (menu) menu.classList.remove('show');

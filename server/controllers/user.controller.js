@@ -32,35 +32,35 @@ exports.getUserProfile = async (req, res) => {
       : [];
 
     const isFollowing = currentUserId
-      ? user.followers.some((f) => f._id.toString() === currentUserId)
+      ? (user.followers || []).some((f) => f && f._id && f._id.toString() === currentUserId)
       : false;
     const isSelf = currentUserId === user._id.toString();
 
     // Enrich followers list
-    const enrichedFollowers = user.followers.map((f) => {
+    const enrichedFollowers = (user.followers || []).filter(Boolean).map((f) => {
       const fObj = f.toObject ? f.toObject() : (f._doc || f);
-      const fId = (fObj._id || f._id).toString();
+      const fId = (fObj._id || f._id || '').toString();
       return {
         _id: fId,
-        name: fObj.name,
-        username: fObj.username,
-        avatar: fObj.avatar,
-        bio: fObj.bio,
+        name: fObj.name || '',
+        username: fObj.username || '',
+        avatar: fObj.avatar || '',
+        bio: fObj.bio || '',
         isFollowing: !!(currentUserId && currentUserFollowingIds.includes(fId)),
         isSelf: !!(currentUserId && currentUserId === fId),
       };
     });
 
     // Enrich following list
-    const enrichedFollowing = user.following.map((f) => {
+    const enrichedFollowing = (user.following || []).filter(Boolean).map((f) => {
       const fObj = f.toObject ? f.toObject() : (f._doc || f);
-      const fId = (fObj._id || f._id).toString();
+      const fId = (fObj._id || f._id || '').toString();
       return {
         _id: fId,
-        name: fObj.name,
-        username: fObj.username,
-        avatar: fObj.avatar,
-        bio: fObj.bio,
+        name: fObj.name || '',
+        username: fObj.username || '',
+        avatar: fObj.avatar || '',
+        bio: fObj.bio || '',
         isFollowing: !!(currentUserId && currentUserFollowingIds.includes(fId)),
         isSelf: !!(currentUserId && currentUserId === fId),
       };
