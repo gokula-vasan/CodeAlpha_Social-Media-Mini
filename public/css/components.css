@@ -1337,32 +1337,47 @@
 
 .profile-tabs-nav {
   display: flex;
+  align-items: center;
+  justify-content: flex-start;
   border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
+  margin-top: 24px;
   margin-bottom: 20px;
-  justify-content: center;
-  gap: 32px;
+  gap: 8px;
   overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 4px;
+}
+
+.profile-tabs-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .profile-tab-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 12px;
-  font-size: 0.88rem;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 14px;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--text-muted);
   cursor: pointer;
   position: relative;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   white-space: nowrap;
-  transition: color var(--transition-fast);
+  flex: 1 1 auto;
+  min-width: max-content;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .profile-tab-item:hover {
   color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .profile-tab-item.active {
@@ -1373,26 +1388,57 @@
   content: '';
   position: absolute;
   bottom: -1px;
-  left: 0;
-  right: 0;
+  left: 2px;
+  right: 2px;
   height: 2px;
   background: var(--primary);
+  border-radius: 2px;
 }
 
 .tab-count-badge {
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-color);
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   font-weight: 800;
   padding: 2px 7px;
   border-radius: var(--radius-full);
   color: var(--text-secondary);
+  line-height: 1.2;
 }
 
 .profile-tab-item.active .tab-count-badge {
   background: rgba(99, 102, 241, 0.15);
   border-color: rgba(99, 102, 241, 0.3);
   color: var(--primary);
+}
+
+@media (max-width: 640px) {
+  .profile-header-card {
+    padding: 24px 16px 16px 16px;
+    border-radius: var(--radius-lg);
+  }
+
+  .profile-tabs-nav {
+    gap: 4px;
+    padding: 0;
+    margin-top: 18px;
+  }
+
+  .profile-tab-item {
+    padding: 10px 8px;
+    font-size: 0.78rem;
+    gap: 5px;
+  }
+
+  .profile-tab-item svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .tab-count-badge {
+    padding: 1px 5px;
+    font-size: 0.7rem;
+  }
 }
 
 /* Profile 3-Column Grid */
