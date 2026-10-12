@@ -84,7 +84,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 input::placeholder, textarea::placeholder {
-  color: var(--text-muted);
+  color: var(--text-placeholder);
 }
 
 img {
@@ -221,8 +221,8 @@ img {
 
 /* Hashtag / Mention Styling */
 .hashtag, .mention {
-  color: #3b82f6;
-  font-weight: 500;
+  color: var(--hashtag-color);
+  font-weight: 600;
   cursor: pointer;
 }
 .hashtag:hover, .mention:hover {

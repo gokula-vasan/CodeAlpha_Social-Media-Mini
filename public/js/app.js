@@ -374,7 +374,7 @@ const app = {
                 <span class="suggestion-username">@${u.username}</span>
               </div>
             </div>
-            <span style="font-size: 0.8rem; color: #3b82f6;">View Profile →</span>
+            <span style="font-size: 0.82rem; color: var(--hashtag-color); font-weight: 600;">View Profile →</span>
           </div>
         `
           )

@@ -15,6 +15,9 @@
   --success-light: rgba(16, 185, 129, 0.12);
   --warning: #f59e0b;
 
+  --hashtag-color: #60a5fa;
+  --text-placeholder: #8191a6;
+
   /* Typography */
   --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-code: 'JetBrains Mono', monospace;
@@ -49,19 +52,25 @@
   --bg-glass: rgba(15, 20, 28, 0.75);
   --bg-glass-card: rgba(22, 28, 40, 0.65);
   
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-subtle: rgba(255, 255, 255, 0.04);
-  --border-focus: rgba(121, 40, 202, 0.6);
+  --border-color: rgba(255, 255, 255, 0.10);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-focus: rgba(139, 92, 246, 0.6);
 
   --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-placeholder: #8191a6;
   --text-inverse: #090c10;
+  --hashtag-color: #60a5fa;
 
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.65);
-  --shadow-primary: 0 8px 25px rgba(168, 85, 247, 0.3);
+  --shadow-primary: 0 8px 25px rgba(168, 85, 247, 0.35);
+
+  --primary-gradient: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
+  --btn-create-gradient: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
+  --btn-create-shadow: 0 6px 20px rgba(168, 85, 247, 0.35);
 
   --heart-color: #ff2d55;
   --bookmark-color: #f59e0b;
@@ -74,24 +83,30 @@
   --bg-surface-elevated: #ffffff;
   --bg-surface-hover: #f1f5f9;
   --bg-input: #f8fafc;
-  --bg-glass: rgba(255, 255, 255, 0.85);
-  --bg-glass-card: rgba(255, 255, 255, 0.85);
+  --bg-glass: rgba(255, 255, 255, 0.90);
+  --bg-glass-card: rgba(255, 255, 255, 0.90);
 
-  --border-color: #e2e8f0;
-  --border-subtle: #f1f5f9;
-  --border-focus: rgba(121, 40, 202, 0.4);
+  --border-color: #d1d5db;
+  --border-subtle: #e5e7eb;
+  --border-focus: rgba(124, 58, 237, 0.55);
+
+  --primary: #7c3aed;
+  --primary-hover: #6d28d9;
+  --primary-light: rgba(124, 58, 237, 0.08);
 
   --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-placeholder: #64748b;
   --text-inverse: #ffffff;
+  --hashtag-color: #2563eb;
 
-  --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.12);
-  --shadow-primary: 0 6px 20px rgba(192, 132, 252, 0.22);
+  --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.10);
+  --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.14);
+  --shadow-primary: 0 6px 20px rgba(124, 58, 237, 0.25);
 
-  --primary-gradient: linear-gradient(135deg, #f472b6 0%, #c084fc 50%, #818cf8 100%);
-  --btn-create-gradient: linear-gradient(135deg, rgba(244, 114, 182, 0.85) 0%, rgba(192, 132, 252, 0.85) 50%, rgba(129, 140, 248, 0.85) 100%);
-  --btn-create-shadow: 0 6px 18px rgba(192, 132, 252, 0.22);
+  --primary-gradient: linear-gradient(135deg, #db2777 0%, #7c3aed 50%, #4f46e5 100%);
+  --btn-create-gradient: linear-gradient(135deg, #db2777 0%, #7c3aed 50%, #4f46e5 100%);
+  --btn-create-shadow: 0 6px 18px rgba(124, 58, 237, 0.28);
 }
