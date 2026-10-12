@@ -37,7 +37,7 @@ const protect = async (req, res, next) => {
     console.error('Auth verification error:', error.message);
     return res.status(401).json({
       success: false,
-      message: 'Invalid or expired token. Please log in again.',
+      message: 'Invalid token. Please log in again.',
     });
   }
 };

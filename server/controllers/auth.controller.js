@@ -1,12 +1,11 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Helper to generate JWT
+// Helper to generate JWT (Permanent token - does not expire)
 const generateToken = (id) => {
   return jwt.sign(
     { id },
-    process.env.JWT_SECRET || 'connectsphere_jwt_super_secret_key_8844d779',
-    { expiresIn: '30d' }
+    process.env.JWT_SECRET || 'connectsphere_jwt_super_secret_key_8844d779'
   );
 };
 
